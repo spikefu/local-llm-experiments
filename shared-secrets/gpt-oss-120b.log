@@ -1,0 +1,205 @@
+spike@Tokenator shared-secrets % ccr gpt-oss-120b code
+(node:15599) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+╭─── Claude Code v2.1.138 ─────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                 Welcome back Spike!                │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                      ▗ ▗   ▖ ▖                     │ What's new                                                      │
+│                                                    │ Internal fixes                                                  │
+│                        ▘▘ ▝▝                       │ [VSCode] Fixed extension failing to activate on Windows         │
+│    Opus 4.7 (1M context) · API Usage Billing ·     │ Added `CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL` to re-enab… │
+│    spikefu@gmail.com's Organization                │ /release-notes for more                                         │
+│  ~/Developer/local-llm-experiments/shared-secrets  │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Write a single page HTML app that allows two parties to share information confidentially by allowing both parties to
+  independently run the app locally. The app should allow the user to generate a public/private keypair with strong
+  cryptography. The user can then share their public key via any channel of their choice. A user can then use a public
+  key that has been shared with them to encrypt a payload that they paste into an appropriate input in the HTML app.
+  The encrypted payload can then be shared via any channel of their choice and the receiver can use their private key
+  (the pair of their public key) to decrypt the payload using appropriate input fields in the app. Save the file to
+  shared-secrets-gpt-oss-120b.html
+
+⏺ Creating the single‑page HTML app with RSA‑OAEP key generation, encryption, and decryption functionality and saving it
+   as shared‑secrets‑gpt‑oss‑120b.html in the current project.
+
+⏺ Write(shared-secrets-gpt-oss-120b.html)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Create file
+ shared-secrets-gpt-oss-120b.html
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+    1 <!DOCTYPE html>
+    2 <html lang="en">
+    3 <head>
+    4 <meta charset="UTF-8">
+    5 <title>Shared Secrets</title>
+    6 <style>
+    7   body{font-family:sans-serif;max-width:800px;margin:auto;padding:1rem;}
+    8   textarea{width:100%;height:8rem;box-sizing:border-box;}
+    9   button{margin:0.5rem 0;}
+   10   label{font-weight:bold;display:block;margin-top:1rem;}
+   11 </style>
+   12 </head>
+   13 <body>
+   14 <h1>Shared Secrets</h1>
+   15
+   16 <section id="keygen">
+   17   <h2>Key Pair Generation</h2>
+   18   <button id="genKeyBtn">Generate RSA‑4096 Key Pair</button>
+   19   <div>
+   20     <label for="publicKey">Public Key (PEM):</label>
+   21     <textarea id="publicKey" readonly></textarea>
+   22     <label for="privateKey">Private Key (PEM):</label>
+   23     <textarea id="privateKey" readonly></textarea>
+   24   </div>
+   25 </section>
+   26
+   27 <section id="encrypt">
+   28   <h2>Encrypt Message</h2>
+   29   <label for="encPublicKey">Recipient's Public Key (PEM):</label>
+   30   <textarea id="encPublicKey"></textarea>
+   31   <label for="plaintext">Plaintext:</label>
+   32   <textarea id="plaintext"></textarea>
+   33   <button id="encryptBtn">Encrypt</button>
+   34   <label for="ciphertext">Ciphertext (Base64):</label>
+   35   <textarea id="ciphertext" readonly></textarea>
+   36 </section>
+   37
+   38 <section id="decrypt">
+   39   <h2>Decrypt Message</h2>
+   40   <label for="decPrivateKey">Your Private Key (PEM):</label>
+   41   <textarea id="decPrivateKey"></textarea>
+   42   <label for="decCiphertext">Ciphertext (Base64):</label>
+   43   <textarea id="decCiphertext"></textarea>
+   44   <button id="decryptBtn">Decrypt</button>
+   45   <label for="decrypted">Decrypted Plaintext:</label>
+   46   <textarea id="decrypted" readonly></textarea>
+   47 </section>
+   48
+   49 <script>
+   50 /* Utility functions */
+   51 function arrayBufferToBase64(buf) {
+   52   const bytes = new Uint8Array(buf);
+   53   let binary = '';
+   54   for (let i = 0; i < bytes.byteLength; i++) {
+   55     binary += String.fromCharCode(bytes[i]);
+   56   }
+   57   return btoa(binary);
+   58 }
+   59 function base64ToArrayBuffer(b64) {
+   60   const binary = atob(b64);
+   61   const len = binary.length;
+   62   const bytes = new Uint8Array(len);
+   63   for (let i = 0; i < len; i++) {
+   64     bytes[i] = binary.charCodeAt(i);
+   65   }
+   66   return bytes.buffer;
+   67 }
+   68 function formatPem(pemType, b64) {
+   69   const lineLength = 64;
+   70   const lines = [];
+   71   for (let i = 0; i < b64.length; i += lineLength) {
+   72     lines.push(b64.slice(i, i + lineLength));
+   73   }
+   74   return `-----BEGIN ${pemType}-----\n${lines.join('\n')}\n-----END ${pemTy
+      pe}-----`;
+   75 }
+   76 function stripPem(pem) {
+   77   return pem.replace(/-----BEGIN [A-Z ]+-----/, '')
+   78             .replace(/-----END [A-Z ]+-----/, '')
+   79             .replace(/\s/g, '');
+   80 }
+   81
+   82 /* Key Generation */
+   83 document.getElementById('genKeyBtn').addEventListener('click', async () =>
+      {
+   84   const keyPair = await crypto.subtle.generateKey(
+   85     {
+   86       name: 'RSA-OAEP',
+   87       modulusLength: 4096,
+   88       publicExponent: new Uint8Array([1, 0, 1]),
+   89       hash: 'SHA-256'
+   90     },
+   91     true,
+   92     ['encrypt', 'decrypt']
+   93   );
+   94   const spki = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+   95   const pkcs8 = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+   96   const pubPem = formatPem('PUBLIC KEY', arrayBufferToBase64(spki));
+   97   const privPem = formatPem('PRIVATE KEY', arrayBufferToBase64(pkcs8));
+   98   document.getElementById('publicKey').value = pubPem;
+   99   document.getElementById('privateKey').value = privPem;
+  100 });
+  101
+  102 /* Encryption */
+  103 document.getElementById('encryptBtn').addEventListener('click', async () =>
+       {
+  104   const pubPem = document.getElementById('encPublicKey').value.trim();
+  105   const plaintext = document.getElementById('plaintext').value;
+  106   if (!pubPem || !plaintext) return;
+  107   const spkiB64 = stripPem(pubPem);
+  108   const publicKey = await crypto.subtle.importKey(
+  109     'spki',
+  110     base64ToArrayBuffer(spkiB64),
+  111     { name: 'RSA-OAEP', hash: 'SHA-256' },
+  112     false,
+  113     ['encrypt']
+  114   );
+  115   const encoder = new TextEncoder();
+  116   const data = encoder.encode(plaintext);
+  117   const encrypted = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, publi
+      cKey, data);
+  118   const ciphertextB64 = arrayBufferToBase64(encrypted);
+  119   document.getElementById('ciphertext').value = ciphertextB64;
+  120 });
+  121
+  122 /* Decryption */
+  123 document.getElementById('decryptBtn').addEventListener('click', async () =>
+       {
+  124   const privPem = document.getElementById('decPrivateKey').value.trim();
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                      ▗ ▗   ▖ ▖                     │ What's new                                                      │
+│                                                    │ Internal fixes                                                  │
+│                        ▘▘ ▝▝                       │ [VSCode] Fixed extension failing to activate on Windows         │
+│    Opus 4.7 (1M context) · API Usage Billing ·     │ Added `CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL` to re-enab… │
+│    spikefu@gmail.com's Organization                │ /release-notes for more                                         │
+│  ~/Developer/local-llm-experiments/shared-secrets  │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Write a single page HTML app that allows two parties to share information confidentially by allowing both parties to
+  independently run the app locally. The app should allow the user to generate a public/private keypair with strong
+  cryptography. The user can then share their public key via any channel of their choice. A user can then use a public
+  key that has been shared with them to encrypt a payload that they paste into an appropriate input in the HTML app.
+  The encrypted payload can then be shared via any channel of their choice and the receiver can use their private key
+  (the pair of their public key) to decrypt the payload using appropriate input fields in the app. Save the file to
+  shared-secrets-gpt-oss-120b.html
+
+⏺ Creating the single‑page HTML app with RSA‑OAEP key generation, encryption, and decryption functionality and saving it
+   as shared‑secrets‑gpt‑oss‑120b.html in the current project.
+
+⏺ Write(shared-secrets-gpt-oss-120b.html)
+  ⎿  Wrote 144 lines to shared-secrets-gpt-oss-120b.html
+       1 <!DOCTYPE html>
+       2 <html lang="en">
+       3 <head>
+       4 <meta charset="UTF-8">
+       5 <title>Shared Secrets</title>
+       6 <style>
+       7   body{font-family:sans-serif;max-width:800px;margin:auto;padding:1rem;}
+       8   textarea{width:100%;height:8rem;box-sizing:border-box;}
+       9   button{margin:0.5rem 0;}
+      10   label{font-weight:bold;display:block;margin-top:1rem;}
+     … +134 lines (ctrl+o to expand)
+
+⏺ The HTML app shared‑secrets‑gpt‑oss‑120b.html has been created. It lets each party:
+
+  1. Generate a strong RSA‑4096 key pair locally.
+  2. Export/share the public key (PEM format) via any channel.
+  3. Encrypt a message using a recipient’s public key.
+  4. Decrypt a received ciphertext using the private key.
+
+  Open the file in a browser to use the tool.
+
+✻ Sautéed for 2m 34s
