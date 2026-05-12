@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Confidential Key Exchange</title>
+        <style>
+            :root {
+                --bg: #0f1117;
+                --surface: #1a1d27;
+                --surface2: #242836;
+                --border: #2e3345;
+                --accent: #6c5ce7;
+                --accent-hover: #7f71ed;
+                --accent-glow: rgba(108, 92, 231, 0.25);
+                --green: #00b894;
+                --green-hover: #00d6a8;
+                --green-glow: rgba(0, 184, 148, 0.25);
+                --red: #e17055;
+                --red-hover: #e88a74;
+                --red-glow: rgba(225, 112, 85, 0.25);
+                --yellow: #fdcb6e;
+                --yellow-glow: rgba(253, 203, 110, 0.2);
+                --text: #e2e8f0;
+                --text-dim: #8892a8;
+                --text-muted: #5a6378;
+                --radius: 10px;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    "Segoe UI",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                min-height: 100vh;
+                line-height: 1.6;
+            }
+
+            .container {
+                max-width: 860px;
+                margin: 0 auto;
+                padding: 24px 20px 60px;
+            }
+
+            header {
+                text-align: center;
+                padding: 40px 0 36px;
+            }
+
+            header h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #6c5ce7, #a29bfe, #00b894);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 8px;
+                letter-spacing: -0.5px;
+            }
+
+            header p {
+                color: var(--text-dim);
+                font-size: 0.95rem;
+                max-width: 520px;
+                margin: 0 auto;
+            }
+
+            .steps {
+                display: flex;
+                justify-content: center;
+                gap: 32px;
+                margin: 28px 0 36px;
+                flex-wrap: wrap;
+            }
+
+            .step {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--text-dim);
+                font-size: 0.88rem;
+            }
+
+            .step-num {
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                background: var(--surface2);
+                border: 2px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 0.82rem;
+                color: var(--accent);
+                flex-shrink: 0;
+            }
+
+            .card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 28px;
+                margin-bottom: 20px;
+                transition: border-color 0.2s;
+            }
+
+            .card:hover {
+                border-color: #3a4060;
+            }
+
+            .card-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .card-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.15rem;
+                flex-shrink: 0;
+            }
+
+            .card-icon.purple {
+                background: var(--accent-glow);
+            }
+            .card-icon.green {
+                background: var(--green-glow);
+            }
+            .card-icon.red {
+                background: var(--red-glow);
+            }
+            .card-icon.yellow {
+                background: var(--yellow-glow);
+            }
+
+            .card-header h2 {
+                font-size: 1.1rem;
+                font-weight: 600;
+            }
+
+            .card-header .badge {
+                font-size: 0.7rem;
+                padding: 3px 9px;
+                border-radius: 20px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-left: auto;
+            }
+
+            .badge.purple {
+                background: var(--accent-glow);
+                color: var(--accent);
+            }
+            .badge.green {
+                background: var(--green-glow);
+                color: var(--green);
+            }
+            .badge.red {
+                background: var(--red-glow);
+                color: var(--red);
+            }
+            .badge.yellow {
+                background: var(--yellow-glow);
+                color: var(--yellow);
+            }
+
+            label {
+                display: block;
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: var(--text-dim);
+                margin-bottom: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            textarea,
+            input[type="text"] {
+                width: 100%;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                color: var(--text);
+                font-family: "Consolas", "Monaco", monospace;
+                font-size: 0.85rem;
+                padding: 12px 14px;
+                resize: vertical;
+                transition:
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+                outline: none;
+            }
+
+            textarea:focus,
+            input[type="text"]:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px var(--accent-glow);
+            }
+
+            textarea {
+                min-height: 100px;
+                line-height: 1.5;
+            }
+
+            .input-group {
+                margin-bottom: 16px;
+            }
+
+            .row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+
+            @media (max-width: 600px) {
+                .row {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            button {
+                cursor: pointer;
+                border: none;
+                font-family: inherit;
+                font-weight: 600;
+                font-size: 0.88rem;
+                padding: 11px 22px;
+                border-radius: 8px;
+                transition: all 0.2s;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                letter-spacing: 0.2px;
+            }
+
+            button:active {
+                transform: scale(0.97);
+            }
+
+            .btn-primary {
+                background: var(--accent);
+                color: white;
+            }
+            .btn-primary:hover {
+                background: var(--accent-hover);
+                box-shadow: 0 4px 20px var(--accent-glow);
+            }
+
+            .btn-success {
+                background: var(--green);
+                color: #0a1628;
+            }
+            .btn-success:hover {
+                background: var(--green-hover);
+                box-shadow: 0 4px 20px var(--green-glow);
+            }
+
+            .btn-danger {
+                background: var(--red);
+                color: white;
+            }
+            .btn-danger:hover {
+                background: var(--red-hover);
+                box-shadow: 0 4px 20px var(--red-glow);
+            }
+
+            .btn-outline {
+                background: transparent;
+                color: var(--text-dim);
+                border: 1px solid var(--border);
+            }
+            .btn-outline:hover {
+                border-color: var(--text-dim);
+                color: var(--text);
+            }
+
+            .btn-sm {
+                padding: 7px 14px;
+                font-size: 0.8rem;
+            }
+
+            .btn-row {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 14px;
+            }
+
+            .output-area {
+                position: relative;
+                margin-top: 14px;
+            }
+
+            .output-area textarea {
+                background: var(--surface2);
+                border-color: var(--border);
+                color: var(--green);
+                min-height: 80px;
+            }
+
+            .output-area textarea.error {
+                color: var(--red);
+                border-color: var(--red);
+            }
+
+            .output-area textarea.warning {
+                color: var(--yellow);
+                border-color: #e0a800;
+            }
+
+            .copy-btn {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                color: var(--text-dim);
+                padding: 5px 10px;
+                font-size: 0.75rem;
+                border-radius: 6px;
+                z-index: 2;
+            }
+
+            .copy-btn:hover {
+                color: var(--text);
+                border-color: var(--text-dim);
+            }
+
+            .key-display {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 14px;
+                margin-top: 12px;
+                position: relative;
+                word-break: break-all;
+                font-family: "Consolas", "Monaco", monospace;
+                font-size: 0.78rem;
+                color: var(--green);
+                line-height: 1.6;
+                max-height: 200px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+            }
+
+            .key-display::-webkit-scrollbar {
+                width: 6px;
+            }
+            .key-display::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .key-display::-webkit-scrollbar-thumb {
+                background: var(--border);
+                border-radius: 3px;
+            }
+
+            .status-bar {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 14px;
+                border-radius: 8px;
+                font-size: 0.82rem;
+                margin-top: 12px;
+            }
+
+            .status-bar.info {
+                background: var(--accent-glow);
+                color: #a29bfe;
+                border: 1px solid rgba(108, 92, 231, 0.3);
+            }
+
+            .status-bar.success {
+                background: var(--green-glow);
+                color: var(--green);
+                border: 1px solid rgba(0, 184, 148, 0.3);
+            }
+
+            .status-bar.error {
+                background: var(--red-glow);
+                color: var(--red);
+                border: 1px solid rgba(225, 112, 85, 0.3);
+            }
+
+            .divider {
+                height: 1px;
+                background: var(--border);
+                margin: 16px 0;
+            }
+
+            .key-info {
+                font-size: 0.78rem;
+                color: var(--text-muted);
+                margin-top: 6px;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            .fade-in {
+                animation: fadeIn 0.3s ease;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(6px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .toast {
+                position: fixed;
+                bottom: 24px;
+                left: 50%;
+                transform: translateX(-50%) translateY(80px);
+                background: var(--surface2);
+                border: 1px solid var(--border);
+                color: var(--text);
+                padding: 12px 24px;
+                border-radius: 10px;
+                font-size: 0.85rem;
+                font-weight: 500;
+                z-index: 1000;
+                opacity: 0;
+                transition: all 0.3s ease;
+                pointer-events: none;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            }
+
+            .toast.show {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+
+            footer {
+                text-align: center;
+                padding: 30px 0 10px;
+                color: var(--text-muted);
+                font-size: 0.78rem;
+            }
+
+            footer a {
+                color: var(--accent);
+                text-decoration: none;
+            }
+            footer a:hover {
+                text-decoration: underline;
+            }
+
+            .algorithm-note {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: var(--surface2);
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                font-family: "Consolas", monospace;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>🔐 Confidential Key Exchange</h1>
+                <p>
+                    Generate cryptographic keys locally, encrypt messages with a
+                    shared public key, and decrypt with your private key.
+                    Everything runs in your browser.
+                </p>
+            </header>
+
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    Generate your key pair
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    Share your public key
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    Encrypt &amp; decrypt messages
+                </div>
+            </div>
+
+            <!-- KEY GENERATION -->
+            <div class="card" id="card-generate">
+                <div class="card-header">
+                    <div class="card-icon purple">🔑</div>
+                    <h2>Generate Key Pair</h2>
+                    <span class="badge purple">RSA-2048</span>
+                </div>
+                <p
+                    style="
+                        font-size: 0.88rem;
+                        color: var(--text-dim);
+                        margin-bottom: 16px;
+                    "
+                >
+                    Generates a cryptographically strong RSA-2048 key pair using
+                    the Web Crypto API. Your private key never leaves this page.
+                </p>
+                <div class="btn-row">
+                    <button class="btn-primary" onclick="generateKeys()">
+                        ⚡ Generate Key Pair
+                    </button>
+                </div>
+                <div id="keys-generated" class="hidden fade-in">
+                    <div class="divider"></div>
+                    <div class="row">
+                        <div>
+                            <label>Your Public Key</label>
+                            <div
+                                class="key-display"
+                                id="public-key-display"
+                            ></div>
+                            <div class="btn-row" style="margin-top: 8px">
+                                <button
+                                    class="btn-outline btn-sm"
+                                    onclick="
+                                        copyToClipboard(
+                                            'public-key-display',
+                                            'Public key copied!',
+                                        )
+                                    "
+                                >
+                                    📋 Copy
+                                </button>
+                            </div>
+                            <div class="key-info">
+                                Share this with the person you want to receive
+                                encrypted messages from.
+                            </div>
+                        </div>
+                        <div>
+                            <label>Your Private Key</label>
+                            <div
+                                class="key-display"
+                                id="private-key-display"
+                                style="color: var(--red)"
+                            ></div>
+                            <div class="btn-row" style="margin-top: 8px">
+                                <button
+                                    class="btn-outline btn-sm"
+                                    onclick="
+                                        copyToClipboard(
+                                            'private-key-display',
+                                            'Private key copied!',
+                                        )
+                                    "
+                                >
+                                    📋 Copy
+                                </button>
+                                <button
+                                    class="btn-danger btn-sm"
+                                    onclick="clearKeys()"
+                                >
+                                    🗑 Clear Keys
+                                </button>
+                            </div>
+                            <div class="key-info">
+                                Keep this secret! Never share it with anyone.
+                                Needed to decrypt messages.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENCRYPT -->
+            <div class="card" id="card-encrypt">
+                <div class="card-header">
+                    <div class="card-icon green">🔒</div>
+                    <h2>Encrypt a Message</h2>
+                    <span class="badge green">Encrypt</span>
+                </div>
+                <div class="input-group">
+                    <label>Recipient's Public Key</label>
+                    <textarea
+                        id="encrypt-pubkey"
+                        placeholder="Paste the recipient's public key here (PEM or base64 format)..."
+                    ></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Message to Encrypt</label>
+                    <textarea
+                        id="encrypt-message"
+                        placeholder="Type or paste the confidential message you want to encrypt..."
+                    ></textarea>
+                </div>
+                <div class="btn-row">
+                    <button class="btn-success" onclick="encryptMessage()">
+                        🔒 Encrypt Message
+                    </button>
+                    <button class="btn-outline btn-sm" onclick="clearEncrypt()">
+                        Clear
+                    </button>
+                </div>
+                <div id="encrypt-output" class="hidden fade-in">
+                    <div class="divider"></div>
+                    <label>Encrypted Payload</label>
+                    <div class="output-area">
+                        <textarea id="encrypted-output" readonly></textarea>
+                        <button
+                            class="copy-btn"
+                            onclick="
+                                copyToClipboard(
+                                    'encrypted-output',
+                                    'Encrypted payload copied!',
+                                )
+                            "
+                        >
+                            📋 Copy
+                        </button>
+                    </div>
+                    <div class="key-info" style="margin-top: 8px">
+                        Share this encrypted payload with the recipient. They
+                        will use their private key to decrypt it.
+                    </div>
+                </div>
+            </div>
+
+            <!-- DECRYPT -->
+            <div class="card" id="card-decrypt">
+                <div class="card-header">
+                    <div class="card-icon yellow">🔓</div>
+                    <h2>Decrypt a Message</h2>
+                    <span class="badge yellow">Decrypt</span>
+                </div>
+                <div class="input-group">
+                    <label>Your Private Key</label>
+                    <textarea
+                        id="decrypt-privkey"
+                        placeholder="Paste your private key here (PEM or base64 format)..."
+                    ></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Encrypted Payload</label>
+                    <textarea
+                        id="decrypt-ciphertext"
+                        placeholder="Paste the encrypted payload here..."
+                    ></textarea>
+                </div>
+                <div class="btn-row">
+                    <button class="btn-primary" onclick="decryptMessage()">
+                        🔓 Decrypt Message
+                    </button>
+                    <button class="btn-outline btn-sm" onclick="clearDecrypt()">
+                        Clear
+                    </button>
+                </div>
+                <div id="decrypt-output" class="hidden fade-in">
+                    <div class="divider"></div>
+                    <label>Decrypted Message</label>
+                    <div class="output-area">
+                        <textarea id="decrypted-output" readonly></textarea>
+                        <button
+                            class="copy-btn"
+                            onclick="
+                                copyToClipboard(
+                                    'decrypted-output',
+                                    'Decrypted message copied!',
+                                )
+                            "
+                        >
+                            📋 Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>
+                    🔐 All cryptography is performed locally in your browser
+                    using the
+                    <a
+                        href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API"
+                        target="_blank"
+                        >Web Crypto API</a
+                    >. No data is transmitted to any server.
+                </p>
+                <p style="margin-top: 6px">
+                    Algorithm:
+                    <span class="algorithm-note"
+                        >RSA-OAEP + AES-GCM Hybrid Encryption</span
+                    >
+                    · Key Size: <span class="algorithm-note">RSA-2048</span>
+                </p>
+            </footer>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <script>
+            // ==================== UTILITY FUNCTIONS ====================
+
+            function base64ToBytes(base64) {
+                const binaryString = atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes;
+            }
+
+            function bytesToBase64(bytes) {
+                let binary = "";
+                const chunkSize = 8192;
+                for (let i = 0; i < bytes.length; i += chunkSize) {
+                    const chunk = bytes.subarray(i, i + chunkSize);
+                    binary += String.fromCharCode.apply(null, chunk);
+                }
+                return btoa(binary);
+            }
+
+            function bytesToHex(bytes) {
+                return Array.from(bytes)
+                    .map((b) => b.toString(16).padStart(2, "0"))
+                    .join("");
+            }
+
+            function hexToBytes(hex) {
+                const bytes = new Uint8Array(hex.length / 2);
+                for (let i = 0; i < hex.length; i += 2) {
+                    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+                }
+                return bytes;
+            }
+
+            function bufferToBase64(buffer) {
+                return bytesToBase64(new Uint8Array(buffer));
+            }
+
+            function base64ToBuffer(base64) {
+                return base64ToBytes(base64).buffer;
+            }
+
+            function showToast(message) {
+                const toast = document.getElementById("toast");
+                toast.textContent = message;
+                toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 2500);
+            }
+
+            function copyToClipboard(elementId, successMsg) {
+                const el = document.getElementById(elementId);
+                const text = el.value || el.textContent;
+                navigator.clipboard
+                    .writeText(text)
+                    .then(() => {
+                        showToast(successMsg || "Copied to clipboard!");
+                    })
+                    .catch(() => {
+                        // Fallback
+                        const range = document.createRange();
+                        range.selectNodeContents(el);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        document.execCommand("copy");
+                        sel.removeAllRanges();
+                        showToast(successMsg || "Copied to clipboard!");
+                    });
+            }
+
+            // ==================== KEY FORMAT CONVERSION ====================
+
+            function pemToJWK(pemStr) {
+                // Try to detect PEM format
+                pemStr = pemStr.trim();
+
+                if (pemStr.startsWith("{")) {
+                    // Already JWK
+                    return JSON.parse(pemStr);
+                }
+
+                // Try to parse as PKCS8 PEM
+                const pemHeader = "-----BEGIN PUBLIC KEY-----";
+                const pemFooter = "-----END PUBLIC KEY-----";
+                const pemHeaderPriv = "-----BEGIN PRIVATE KEY-----";
+                const pemFooterPriv = "-----END PRIVATE KEY-----";
+                const pemHeaderRSAPriv = "-----BEGIN RSA PRIVATE KEY-----";
+                const pemFooterRSAPriv = "-----END RSA PRIVATE KEY-----";
+
+                let isPrivate = false;
+                let base64Key = "";
+
+                if (pemStr.includes(pemHeader) && pemStr.includes(pemFooter)) {
+                    base64Key = pemStr.split(pemHeader)[1].split(pemFooter)[0];
+                } else if (
+                    pemStr.includes(pemHeaderPriv) &&
+                    pemStr.includes(pemFooterPriv)
+                ) {
+                    base64Key = pemStr
+                        .split(pemHeaderPriv)[1]
+                        .split(pemFooterPriv)[0];
+                    isPrivate = true;
+                } else if (
+                    pemStr.includes(pemHeaderRSAPriv) &&
+                    pemStr.includes(pemFooterRSAPriv)
+                ) {
+                    base64Key = pemStr
+                        .split(pemHeaderRSAPriv)[1]
+                        .split(pemFooterRSAPriv)[0];
+                    isPrivate = true;
+                } else {
+                    // Assume it's raw base64
+                    base64Key = pemStr;
+                }
+
+                base64Key = base64Key.replace(/\s/g, "");
+
+                if (!isPrivate) {
+                    return importRsaPublicKey(base64Key);
+                } else {
+                    return importRsaPrivateKey(base64Key);
+                }
+            }
+
+            function jwkToPem(jwk, isPrivate) {
+                // Convert JWK to PEM format
+                // For RSA keys, we need to convert the raw bytes to DER/PEM
+                // We'll export as PKCS8 PEM
+                const type = isPrivate ? "private" : "public";
+                return exportToPem(jwk, type);
+            }
+
+            function exportToPem(jwk, type) {
+                // Use subtle crypto to export in PKCS8/SPKI format
+                return crypto.subtle.exportKey("pkcs8", jwk);
+            }
+
+            async function exportPublicKeyToPem(publicKey) {
+                const jwk = await crypto.subtle.exportKey("jwk", publicKey);
+                const spkiBuffer = await crypto.subtle.exportKey(
+                    "spki",
+                    publicKey,
+                );
+                const base64 = bytesToBase64(new Uint8Array(spkiBuffer));
+                const lines = base64.match(/.{1,64}/g).join("\n");
+                return `-----BEGIN PUBLIC KEY-----\n${lines}\n-----END PUBLIC KEY-----`;
+            }
+
+            async function exportPrivateKeyToPem(privateKey) {
+                const pkcs8Buffer = await crypto.subtle.exportKey(
+                    "pkcs8",
+                    privateKey,
+                );
+                const base64 = bytesToBase64(new Uint8Array(pkcs8Buffer));
+                const lines = base64.match(/.{1,64}/g).join("\n");
+                return `-----BEGIN PRIVATE KEY-----\n${lines}\n-----END PRIVATE KEY-----`;
+            }
+
+            async function importPublicKeyFromPem(pemOrBase64) {
+                pemOrBase64 = pemOrBase64.trim();
+
+                if (pemOrBase64.startsWith("{")) {
+                    // JWK
+                    return crypto.subtle.importKey(
+                        "jwk",
+                        JSON.parse(pemOrBase64),
+                        {
+                            name: "RSA-OAEP",
+                            hash: { name: "SHA-256" },
+                        },
+                        true,
+                        ["encrypt"],
+                    );
+                }
+
+                // Try PEM first
+                const pemHeader = "-----BEGIN PUBLIC KEY-----";
+                const pemFooter = "-----END PUBLIC KEY-----";
+
+                let base64Key;
+                if (
+                    pemOrBase64.includes(pemHeader) &&
+                    pemOrBase64.includes(pemFooter)
+                ) {
+                    base64Key = pemOrBase64
+                        .split(pemHeader)[1]
+                        .split(pemFooter)[0];
+                } else {
+                    base64Key = pemOrBase64;
+                }
+
+                base64Key = base64Key.replace(/\s/g, "");
+
+                const binaryString = atob(base64Key);
+                const keyData = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    keyData[i] = binaryString.charCodeAt(i);
+                }
+
+                return crypto.subtle.importKey(
+                    "spki",
+                    keyData,
+                    {
+                        name: "RSA-OAEP",
+                        hash: { name: "SHA-256" },
+                    },
+                    true,
+                    ["encrypt"],
+                );
+            }
+
+            async function importPrivateKeyFromPem(pemOrBase64) {
+                pemOrBase64 = pemOrBase64.trim();
+
+                if (pemOrBase64.startsWith("{")) {
+                    // JWK
+                    return crypto.subtle.importKey(
+                        "jwk",
+                        JSON.parse(pemOrBase64),
+                        {
+                            name: "RSA-OAEP",
+                            hash: { name: "SHA-256" },
+                        },
+                        true,
+                        ["decrypt"],
+                    );
+                }
+
+                const pemHeader = "-----BEGIN PRIVATE KEY-----";
+                const pemFooter = "-----END PRIVATE KEY-----";
+                const pemHeaderRSA = "-----BEGIN RSA PRIVATE KEY-----";
+                const pemFooterRSA = "-----END RSA PRIVATE KEY-----";
+
+                let base64Key;
+                if (
+                    pemOrBase64.includes(pemHeader) &&
+                    pemOrBase64.includes(pemFooter)
+                ) {
+                    base64Key = pemOrBase64
+                        .split(pemHeader)[1]
+                        .split(pemFooter)[0];
+                } else if (
+                    pemOrBase64.includes(pemHeaderRSA) &&
+                    pemOrBase64.includes(pemFooterRSA)
+                ) {
+                    base64Key = pemOrBase64
+                        .split(pemHeaderRSA)[1]
+                        .split(pemFooterRSA)[0];
+                } else {
+                    base64Key = pemOrBase64;
+                }
+
+                base64Key = base64Key.replace(/\s/g, "");
+
+                const binaryString = atob(base64Key);
+                const keyData = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    keyData[i] = binaryString.charCodeAt(i);
+                }
+
+                return crypto.subtle.importKey(
+                    "pkcs8",
+                    keyData,
+                    {
+                        name: "RSA-OAEP",
+                        hash: { name: "SHA-256" },
+                    },
+                    true,
+                    ["decrypt"],
+                );
+            }
+
+            // ==================== HYBRID ENCRYPTION ====================
+
+            // This uses RSA-OAEP to encrypt a random AES-GCM key,
+            // then AES-GCM to encrypt the actual message.
+            // This allows arbitrarily large payloads.
+
+            async function generateKeys() {
+                try {
+                    const keyPair = await crypto.subtle.generateKey(
+                        {
+                            name: "RSA-OAEP",
+                            modulusLength: 2048,
+                            publicExponent: new Uint8Array([1, 0, 1]), // 65537
+                            hash: "SHA-256",
+                        },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+
+                    // Export and display public key
+                    const pubPem = await exportPublicKeyToPem(
+                        keyPair.publicKey,
+                    );
+                    document.getElementById("public-key-display").textContent =
+                        pubPem;
+
+                    // Export and display private key
+                    const privPem = await exportPrivateKeyToPem(
+                        keyPair.privateKey,
+                    );
+                    document.getElementById("private-key-display").textContent =
+                        privPem;
+
+                    // Store key pair in memory for potential future use
+                    window.currentKeyPair = keyPair;
+
+                    document
+                        .getElementById("keys-generated")
+                        .classList.remove("hidden");
+                    showToast("✅ Key pair generated successfully!");
+                } catch (err) {
+                    showToast("❌ Error generating keys: " + err.message);
+                }
+            }
+
+            async function clearKeys() {
+                window.currentKeyPair = null;
+                document
+                    .getElementById("keys-generated")
+                    .classList.add("hidden");
+                document.getElementById("public-key-display").textContent = "";
+                document.getElementById("private-key-display").textContent = "";
+                showToast("Keys cleared from this page.");
+            }
+
+            async function encryptMessage() {
+                const pubkeyStr = document
+                    .getElementById("encrypt-pubkey")
+                    .value.trim();
+                const message =
+                    document.getElementById("encrypt-message").value;
+
+                if (!pubkeyStr) {
+                    showToast("❌ Please paste the recipient's public key.");
+                    return;
+                }
+                if (!message) {
+                    showToast("❌ Please enter a message to encrypt.");
+                    return;
+                }
+
+                try {
+                    const publicKey = await importPublicKeyFromPem(pubkeyStr);
+
+                    // Generate a random AES-GCM key for the actual message
+                    const aesKey = await crypto.subtle.generateKey(
+                        { name: "AES-GCM", length: 256 },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+
+                    // Generate a random IV
+                    const iv = crypto.getRandomValues(new Uint8Array(12));
+
+                    // Convert message to bytes
+                    const encoder = new TextEncoder();
+                    const messageBytes = encoder.encode(message);
+
+                    // Encrypt message with AES-GCM
+                    const encryptedMessage = await crypto.subtle.encrypt(
+                        { name: "AES-GCM", iv: iv },
+                        aesKey,
+                        messageBytes,
+                    );
+
+                    // Export AES key as JWK
+                    const aesKeyJwk = await crypto.subtle.exportKey(
+                        "jwk",
+                        aesKey,
+                    );
+
+                    // Encrypt AES key with RSA-OAEP
+                    const encryptedAesKey = await crypto.subtle.encrypt(
+                        { name: "RSA-OAEP" },
+                        publicKey,
+                        new TextEncoder().encode(JSON.stringify(aesKeyJwk)),
+                    );
+
+                    // Build output payload
+                    const payload = {
+                        encryptedKey: bufferToBase64(encryptedAesKey),
+                        encryptedData: bufferToBase64(encryptedMessage),
+                        iv: bufferToBase64(iv),
+                        algorithm: "RSA-OAEP/AES-256-GCM",
+                    };
+
+                    const output = JSON.stringify(payload, null, 2);
+                    document.getElementById("encrypted-output").value = output;
+                    document
+                        .getElementById("encrypt-output")
+                        .classList.remove("hidden");
+                    document.getElementById("encrypted-output").className = "";
+                    showToast("✅ Message encrypted successfully!");
+                } catch (err) {
+                    document
+                        .getElementById("encrypt-output")
+                        .classList.remove("hidden");
+                    document.getElementById("encrypted-output").value =
+                        "❌ Encryption failed: " + err.message;
+                    document.getElementById("encrypted-output").className =
+                        "error";
+                    showToast("❌ Encryption failed.");
+                }
+            }
+
+            async function decryptMessage() {
+                const privkeyStr = document
+                    .getElementById("decrypt-privkey")
+                    .value.trim();
+                const ciphertextStr = document
+                    .getElementById("decrypt-ciphertext")
+                    .value.trim();
+
+                if (!privkeyStr) {
+                    showToast("❌ Please paste your private key.");
+                    return;
+                }
+                if (!ciphertextStr) {
+                    showToast("❌ Please paste the encrypted payload.");
+                    return;
+                }
+
+                try {
+                    const privateKey =
+                        await importPrivateKeyFromPem(privkeyStr);
+
+                    // Parse payload
+                    let payload;
+                    try {
+                        payload = JSON.parse(ciphertextStr);
+                    } catch {
+                        throw new Error(
+                            "Encrypted payload is not valid JSON. Please ensure you pasted the complete encrypted payload.",
+                        );
+                    }
+
+                    if (
+                        !payload.encryptedKey ||
+                        !payload.encryptedData ||
+                        !payload.iv
+                    ) {
+                        throw new Error(
+                            "Encrypted payload is missing required fields (encryptedKey, encryptedData, or iv).",
+                        );
+                    }
+
+                    // Decrypt AES key with RSA-OAEP
+                    const encryptedAesKeyBytes = base64ToBytes(
+                        payload.encryptedKey,
+                    );
+                    const decryptedAesKeyJwkStr = new TextDecoder().decode(
+                        await crypto.subtle.decrypt(
+                            { name: "RSA-OAEP" },
+                            privateKey,
+                            encryptedAesKeyBytes,
+                        ),
+                    );
+
+                    const aesKeyJwk = JSON.parse(decryptedAesKeyJwkStr);
+                    const aesKey = await crypto.subtle.importKey(
+                        "jwk",
+                        aesKeyJwk,
+                        { name: "AES-GCM", length: 256 },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+
+                    // Decrypt message with AES-GCM
+                    const iv = base64ToBytes(payload.iv);
+                    const encryptedDataBytes = base64ToBytes(
+                        payload.encryptedData,
+                    );
+
+                    const decryptedBytes = await crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv: iv },
+                        aesKey,
+                        encryptedDataBytes,
+                    );
+
+                    // Convert bytes to string
+                    const decoder = new TextDecoder();
+                    const decryptedMessage = decoder.decode(decryptedBytes);
+
+                    document.getElementById("decrypted-output").value =
+                        decryptedMessage;
+                    document
+                        .getElementById("decrypt-output")
+                        .classList.remove("hidden");
+                    document.getElementById("decrypted-output").className = "";
+                    showToast("✅ Message decrypted successfully!");
+                } catch (err) {
+                    document
+                        .getElementById("decrypt-output")
+                        .classList.remove("hidden");
+                    document.getElementById("decrypted-output").value =
+                        "❌ Decryption failed: " + err.message;
+                    document.getElementById("decrypted-output").className =
+                        "error";
+                    showToast("❌ Decryption failed.");
+                }
+            }
+
+            function clearEncrypt() {
+                document.getElementById("encrypt-pubkey").value = "";
+                document.getElementById("encrypt-message").value = "";
+                document.getElementById("encrypted-output").value = "";
+                document
+                    .getElementById("encrypt-output")
+                    .classList.add("hidden");
+            }
+
+            function clearDecrypt() {
+                document.getElementById("decrypt-privkey").value = "";
+                document.getElementById("decrypt-ciphertext").value = "";
+                document.getElementById("decrypted-output").value = "";
+                document
+                    .getElementById("decrypt-output")
+                    .classList.add("hidden");
+            }
+        </script>
+    </body>
+</html>

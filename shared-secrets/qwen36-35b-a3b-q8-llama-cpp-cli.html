@@ -1,0 +1,1579 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Secure Message Exchange</title>
+        <style>
+            :root {
+                --bg: #0f1117;
+                --surface: #1a1d27;
+                --surface2: #242836;
+                --border: #2e3348;
+                --accent: #6c63ff;
+                --accent-hover: #7b73ff;
+                --accent-glow: rgba(108, 99, 255, 0.25);
+                --green: #34d399;
+                --green-glow: rgba(52, 211, 153, 0.2);
+                --red: #f87171;
+                --red-glow: rgba(248, 113, 113, 0.15);
+                --yellow: #fbbf24;
+                --text: #e2e8f0;
+                --text-dim: #94a3b8;
+                --text-muted: #64748b;
+                --radius: 10px;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    "Segoe UI",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                min-height: 100vh;
+                line-height: 1.6;
+            }
+
+            .container {
+                max-width: 860px;
+                margin: 0 auto;
+                padding: 24px 20px 60px;
+            }
+
+            header {
+                text-align: center;
+                padding: 40px 0 10px;
+            }
+
+            header h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                background: linear-gradient(
+                    135deg,
+                    var(--accent),
+                    #a78bfa,
+                    var(--green)
+                );
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 8px;
+                letter-spacing: -0.5px;
+            }
+
+            header p {
+                color: var(--text-dim);
+                font-size: 0.95rem;
+                max-width: 560px;
+                margin: 0 auto;
+            }
+
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: var(--green-glow);
+                border: 1px solid rgba(52, 211, 153, 0.3);
+                color: var(--green);
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 16px;
+            }
+
+            .badge svg {
+                width: 14px;
+                height: 14px;
+            }
+
+            /* Tabs */
+            .tabs {
+                display: flex;
+                gap: 4px;
+                background: var(--surface);
+                border-radius: var(--radius);
+                padding: 4px;
+                margin: 28px 0 24px;
+                border: 1px solid var(--border);
+            }
+
+            .tab-btn {
+                flex: 1;
+                padding: 12px 8px;
+                background: transparent;
+                border: none;
+                color: var(--text-muted);
+                font-size: 0.88rem;
+                font-weight: 600;
+                cursor: pointer;
+                border-radius: 8px;
+                transition: all 0.25s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .tab-btn:hover {
+                color: var(--text-dim);
+                background: var(--surface2);
+            }
+
+            .tab-btn.active {
+                background: var(--accent);
+                color: white;
+                box-shadow: 0 2px 12px var(--accent-glow);
+            }
+
+            .tab-btn svg {
+                width: 18px;
+                height: 18px;
+                flex-shrink: 0;
+            }
+
+            .panel {
+                display: none;
+            }
+            .panel.active {
+                display: block;
+            }
+
+            /* Cards */
+            .card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 24px;
+                margin-bottom: 20px;
+            }
+
+            .card-title {
+                font-size: 1.05rem;
+                font-weight: 600;
+                margin-bottom: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .card-title .icon {
+                width: 20px;
+                height: 20px;
+                color: var(--accent);
+            }
+
+            .card-desc {
+                color: var(--text-dim);
+                font-size: 0.85rem;
+                margin-bottom: 18px;
+            }
+
+            /* Form elements */
+            label {
+                display: block;
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: var(--text-dim);
+                margin-bottom: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            textarea,
+            input[type="text"] {
+                width: 100%;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                color: var(--text);
+                font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+                font-size: 0.85rem;
+                padding: 12px 14px;
+                resize: vertical;
+                transition:
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+                line-height: 1.5;
+            }
+
+            textarea:focus,
+            input[type="text"]:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px var(--accent-glow);
+            }
+
+            textarea::placeholder,
+            input::placeholder {
+                color: var(--text-muted);
+            }
+
+            textarea {
+                min-height: 100px;
+            }
+
+            .input-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+
+            @media (max-width: 600px) {
+                .input-row {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            /* Buttons */
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 11px 22px;
+                border: none;
+                border-radius: 8px;
+                font-size: 0.88rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-family: inherit;
+            }
+
+            .btn svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .btn-primary {
+                background: var(--accent);
+                color: white;
+            }
+            .btn-primary:hover {
+                background: var(--accent-hover);
+                box-shadow: 0 4px 16px var(--accent-glow);
+                transform: translateY(-1px);
+            }
+
+            .btn-success {
+                background: var(--green);
+                color: #0f1117;
+            }
+            .btn-success:hover {
+                box-shadow: 0 4px 16px var(--green-glow);
+                transform: translateY(-1px);
+            }
+
+            .btn-danger {
+                background: var(--red);
+                color: white;
+            }
+            .btn-danger:hover {
+                box-shadow: 0 4px 16px var(--red-glow);
+                transform: translateY(-1px);
+            }
+
+            .btn-outline {
+                background: transparent;
+                color: var(--text-dim);
+                border: 1px solid var(--border);
+            }
+            .btn-outline:hover {
+                border-color: var(--text-muted);
+                color: var(--text);
+                background: var(--surface2);
+            }
+
+            .btn-sm {
+                padding: 8px 14px;
+                font-size: 0.8rem;
+            }
+
+            .btn-group {
+                display: flex;
+                gap: 10px;
+                margin-top: 16px;
+                flex-wrap: wrap;
+            }
+
+            /* Output boxes */
+            .output-box {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 14px;
+                font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+                font-size: 0.82rem;
+                color: var(--green);
+                word-break: break-all;
+                white-space: pre-wrap;
+                max-height: 200px;
+                overflow-y: auto;
+                margin-top: 8px;
+                position: relative;
+            }
+
+            .output-box.error {
+                color: var(--red);
+                border-color: rgba(248, 113, 113, 0.3);
+            }
+
+            .output-box.plaintext {
+                color: var(--text);
+            }
+
+            /* Key display */
+            .key-display {
+                display: flex;
+                gap: 12px;
+                align-items: flex-start;
+                margin-top: 12px;
+            }
+
+            .key-display textarea {
+                flex: 1;
+                min-height: 80px;
+            }
+
+            /* Steps */
+            .steps {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .step {
+                display: flex;
+                gap: 14px;
+                align-items: flex-start;
+            }
+
+            .step-num {
+                width: 28px;
+                height: 28px;
+                min-width: 28px;
+                border-radius: 50%;
+                background: var(--accent);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.8rem;
+                font-weight: 700;
+            }
+
+            .step-content h4 {
+                font-size: 0.9rem;
+                font-weight: 600;
+                margin-bottom: 2px;
+            }
+
+            .step-content p {
+                font-size: 0.82rem;
+                color: var(--text-dim);
+            }
+
+            /* Toast */
+            .toast {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background: var(--surface2);
+                border: 1px solid var(--border);
+                color: var(--text);
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 0.85rem;
+                font-weight: 500;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+                transform: translateY(100px);
+                opacity: 0;
+                transition: all 0.3s ease;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .toast.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            .toast.success {
+                border-color: rgba(52, 211, 153, 0.4);
+            }
+            .toast.error {
+                border-color: rgba(248, 113, 113, 0.4);
+            }
+
+            /* Info callout */
+            .callout {
+                background: rgba(108, 99, 255, 0.08);
+                border: 1px solid rgba(108, 99, 255, 0.2);
+                border-radius: 8px;
+                padding: 14px 16px;
+                font-size: 0.83rem;
+                color: var(--text-dim);
+                margin-bottom: 18px;
+                display: flex;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .callout svg {
+                width: 18px;
+                height: 18px;
+                color: var(--accent);
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+
+            .divider {
+                height: 1px;
+                background: var(--border);
+                margin: 20px 0;
+            }
+
+            .inline-flex {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin-top: 8px;
+            }
+
+            .tag {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: var(--surface2);
+                border: 1px solid var(--border);
+                padding: 3px 10px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+                color: var(--text-muted);
+            }
+
+            .tag.green {
+                border-color: rgba(52, 211, 153, 0.3);
+                color: var(--green);
+            }
+
+            .key-info {
+                display: flex;
+                gap: 12px;
+                margin-top: 12px;
+                flex-wrap: wrap;
+            }
+
+            .key-info .tag {
+                cursor: default;
+            }
+
+            .warning-box {
+                background: rgba(251, 191, 36, 0.08);
+                border: 1px solid rgba(251, 191, 36, 0.25);
+                border-radius: 8px;
+                padding: 12px 16px;
+                font-size: 0.82rem;
+                color: var(--yellow);
+                margin-bottom: 16px;
+                display: flex;
+                gap: 8px;
+                align-items: flex-start;
+            }
+
+            .warning-box svg {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+
+            .footer-note {
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 0.78rem;
+                margin-top: 32px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+            }
+
+            .hidden {
+                display: none !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <div class="badge">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect
+                            x="3"
+                            y="11"
+                            width="18"
+                            height="11"
+                            rx="2"
+                            ry="2"
+                        />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    End-to-End Encrypted
+                </div>
+                <h1>Secure Message Exchange</h1>
+                <p>
+                    Generate cryptographic keys, encrypt messages with a
+                    recipient's public key, and decrypt them with your private
+                    key — all in your browser.
+                </p>
+            </header>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('generate')">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                        />
+                    </svg>
+                    Generate Keys
+                </button>
+                <button class="tab-btn" onclick="switchTab('encrypt')">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect
+                            x="3"
+                            y="11"
+                            width="18"
+                            height="11"
+                            rx="2"
+                            ry="2"
+                        />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    Encrypt
+                </button>
+                <button class="tab-btn" onclick="switchTab('decrypt')">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect
+                            x="3"
+                            y="11"
+                            width="18"
+                            height="11"
+                            rx="2"
+                            ry="2"
+                        />
+                        <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                    </svg>
+                    Decrypt
+                </button>
+            </div>
+
+            <!-- ==================== GENERATE KEYS ==================== -->
+            <div id="panel-generate" class="panel active">
+                <div class="card">
+                    <div class="card-title">
+                        <svg
+                            class="icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                            />
+                        </svg>
+                        Generate New Key Pair
+                    </div>
+                    <p class="card-desc">
+                        Creates a 2048-bit RSA key pair using your browser's
+                        built-in cryptographic engine. Your keys never leave
+                        this device.
+                    </p>
+
+                    <div class="callout">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="16" x2="12" y2="12" />
+                            <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                        <span
+                            >The <strong>public key</strong> can be shared
+                            openly. The <strong>private key</strong> must be
+                            kept secret — anyone with it can decrypt messages
+                            meant for you.</span
+                        >
+                    </div>
+
+                    <div class="btn-group">
+                        <button
+                            class="btn btn-primary"
+                            onclick="generateKeys()"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                                />
+                            </svg>
+                            Generate Keys
+                        </button>
+                    </div>
+
+                    <div id="key-results" class="hidden">
+                        <div class="divider"></div>
+
+                        <div class="key-info">
+                            <span class="tag green">✓ RSA-2048</span>
+                            <span class="tag green">✓ OAEP-SHA256</span>
+                            <span class="tag green">✓ AES-256-GCM</span>
+                        </div>
+
+                        <div style="margin-top: 20px">
+                            <label
+                                >Your Public Key
+                                <span
+                                    style="
+                                        text-transform: none;
+                                        letter-spacing: 0;
+                                        font-weight: 400;
+                                    "
+                                    >(share this freely)</span
+                                ></label
+                            >
+                            <div class="key-display">
+                                <textarea
+                                    id="public-key-output"
+                                    readonly
+                                ></textarea>
+                            </div>
+                            <div class="btn-group">
+                                <button
+                                    class="btn btn-outline btn-sm"
+                                    onclick="
+                                        copyToClipboard('public-key-output')
+                                    "
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        style="width: 14px; height: 14px"
+                                    >
+                                        <rect
+                                            x="9"
+                                            y="9"
+                                            width="13"
+                                            height="13"
+                                            rx="2"
+                                            ry="2"
+                                        />
+                                        <path
+                                            d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                        />
+                                    </svg>
+                                    Copy
+                                </button>
+                                <button
+                                    class="btn btn-outline btn-sm"
+                                    onclick="
+                                        downloadKey(
+                                            'public-key-output',
+                                            'public-key.pem',
+                                        )
+                                    "
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        style="width: 14px; height: 14px"
+                                    >
+                                        <path
+                                            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                        />
+                                        <polyline points="7 10 12 15 17 10" />
+                                        <line x1="12" y1="15" x2="12" y2="3" />
+                                    </svg>
+                                    Download
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px">
+                            <div class="warning-box">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                                    />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                                <span
+                                    ><strong
+                                        >Keep your private key secure.</strong
+                                    >
+                                    Anyone who obtains this key can decrypt
+                                    messages addressed to you. Store it safely
+                                    and never share it.</span
+                                >
+                            </div>
+                            <label
+                                >Your Private Key
+                                <span
+                                    style="
+                                        text-transform: none;
+                                        letter-spacing: 0;
+                                        font-weight: 400;
+                                    "
+                                    >(keep this secret!)</span
+                                ></label
+                            >
+                            <div class="key-display">
+                                <textarea
+                                    id="private-key-output"
+                                    readonly
+                                ></textarea>
+                            </div>
+                            <div class="btn-group">
+                                <button
+                                    class="btn btn-outline btn-sm"
+                                    onclick="
+                                        copyToClipboard('private-key-output')
+                                    "
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        style="width: 14px; height: 14px"
+                                    >
+                                        <rect
+                                            x="9"
+                                            y="9"
+                                            width="13"
+                                            height="13"
+                                            rx="2"
+                                            ry="2"
+                                        />
+                                        <path
+                                            d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                        />
+                                    </svg>
+                                    Copy
+                                </button>
+                                <button
+                                    class="btn btn-outline btn-sm"
+                                    onclick="
+                                        downloadKey(
+                                            'private-key-output',
+                                            'private-key.pem',
+                                        )
+                                    "
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        style="width: 14px; height: 14px"
+                                    >
+                                        <path
+                                            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                        />
+                                        <polyline points="7 10 12 15 17 10" />
+                                        <line x1="12" y1="15" x2="12" y2="3" />
+                                    </svg>
+                                    Download
+                                </button>
+                                <button
+                                    class="btn btn-danger btn-sm"
+                                    onclick="revokeKeys()"
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        style="width: 14px; height: 14px"
+                                    >
+                                        <polyline points="3 6 5 6 21 6" />
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                                        />
+                                    </svg>
+                                    Revoke
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ENCRYPT ==================== -->
+            <div id="panel-encrypt" class="panel">
+                <div class="card">
+                    <div class="card-title">
+                        <svg
+                            class="icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <rect
+                                x="3"
+                                y="11"
+                                width="18"
+                                height="11"
+                                rx="2"
+                                ry="2"
+                            />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Encrypt a Message
+                    </div>
+                    <p class="card-desc">
+                        Paste the recipient's public key and your plaintext
+                        message. The output is a ciphertext packet containing an
+                        encrypted symmetric key and the encrypted message.
+                    </p>
+
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>Get the recipient's public key</h4>
+                                <p>
+                                    Ask the other party to generate keys (tab
+                                    above) and share their public key with you.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>Paste the public key below</h4>
+                                <p>
+                                    Enter the full base64-encoded public key
+                                    string.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>Enter your message</h4>
+                                <p>
+                                    Type or paste the plaintext message you want
+                                    to encrypt.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>Encrypt and share</h4>
+                                <p>
+                                    Click Encrypt, then share the resulting
+                                    ciphertext with the recipient.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <label
+                        >Recipient's Public Key
+                        <span
+                            style="
+                                text-transform: none;
+                                letter-spacing: 0;
+                                font-weight: 400;
+                            "
+                            >(base64 or PEM format)</span
+                        ></label
+                    >
+                    <textarea
+                        id="encrypt-pubkey"
+                        placeholder="-----BEGIN PUBLIC KEY-----&#10;MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...&#10;-----END PUBLIC KEY-----"
+                        rows="4"
+                    ></textarea>
+
+                    <div style="margin-top: 16px">
+                        <label>Plaintext Message</label>
+                        <textarea
+                            id="encrypt-message"
+                            placeholder="Enter the confidential message you want to encrypt..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button
+                            class="btn btn-primary"
+                            onclick="encryptMessage()"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="11"
+                                    rx="2"
+                                    ry="2"
+                                />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            Encrypt Message
+                        </button>
+                    </div>
+
+                    <div
+                        id="encrypt-result"
+                        class="hidden"
+                        style="margin-top: 20px"
+                    >
+                        <label
+                            >Encrypted Ciphertext
+                            <span
+                                style="
+                                    text-transform: none;
+                                    letter-spacing: 0;
+                                    font-weight: 400;
+                                "
+                                >(share this with the recipient)</span
+                            ></label
+                        >
+                        <div class="output-box" id="encrypt-output"></div>
+                        <div class="btn-group">
+                            <button
+                                class="btn btn-success btn-sm"
+                                onclick="copyToClipboard('encrypt-output')"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    style="width: 14px; height: 14px"
+                                >
+                                    <rect
+                                        x="9"
+                                        y="9"
+                                        width="13"
+                                        height="13"
+                                        rx="2"
+                                        ry="2"
+                                    />
+                                    <path
+                                        d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                    />
+                                </svg>
+                                Copy Ciphertext
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== DECRYPT ==================== -->
+            <div id="panel-decrypt" class="panel">
+                <div class="card">
+                    <div class="card-title">
+                        <svg
+                            class="icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <rect
+                                x="3"
+                                y="11"
+                                width="18"
+                                height="11"
+                                rx="2"
+                                ry="2"
+                            />
+                            <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                        </svg>
+                        Decrypt a Message
+                    </div>
+                    <p class="card-desc">
+                        Paste the ciphertext you received and your own private
+                        key to recover the original message.
+                    </p>
+
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>Receive the ciphertext</h4>
+                                <p>
+                                    The other party will send you the encrypted
+                                    ciphertext string.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>
+                                    Paste both ciphertext and your private key
+                                </h4>
+                                <p>
+                                    Enter the ciphertext and your private key in
+                                    the fields below.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>Decrypt and read</h4>
+                                <p>
+                                    Click Decrypt to recover the original
+                                    plaintext message.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <label
+                        >Ciphertext
+                        <span
+                            style="
+                                text-transform: none;
+                                letter-spacing: 0;
+                                font-weight: 400;
+                            "
+                            >(received from sender)</span
+                        ></label
+                    >
+                    <textarea
+                        id="decrypt-ciphertext"
+                        placeholder="Paste the encrypted ciphertext here..."
+                        rows="3"
+                    ></textarea>
+
+                    <div style="margin-top: 16px">
+                        <label
+                            >Your Private Key
+                            <span
+                                style="
+                                    text-transform: none;
+                                    letter-spacing: 0;
+                                    font-weight: 400;
+                                "
+                                >(base64 or PEM format)</span
+                            ></label
+                        >
+                        <textarea
+                            id="decrypt-privkey"
+                            placeholder="-----BEGIN PRIVATE KEY-----&#10;MIIEvgIBADANBgkqhkiG9w0BAQEFAASC...&#10;-----END PRIVATE KEY-----"
+                            rows="5"
+                        ></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button
+                            class="btn btn-success"
+                            onclick="decryptMessage()"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="11"
+                                    rx="2"
+                                    ry="2"
+                                />
+                                <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                            </svg>
+                            Decrypt Message
+                        </button>
+                    </div>
+
+                    <div
+                        id="decrypt-result"
+                        class="hidden"
+                        style="margin-top: 20px"
+                    >
+                        <label>Decrypted Plaintext</label>
+                        <div
+                            class="output-box plaintext"
+                            id="decrypt-output"
+                        ></div>
+                        <div class="btn-group">
+                            <button
+                                class="btn btn-outline btn-sm"
+                                onclick="copyToClipboard('decrypt-output')"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    style="width: 14px; height: 14px"
+                                >
+                                    <rect
+                                        x="9"
+                                        y="9"
+                                        width="13"
+                                        height="13"
+                                        rx="2"
+                                        ry="2"
+                                    />
+                                    <path
+                                        d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                    />
+                                </svg>
+                                Copy Plaintext
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-note">
+                All cryptographic operations are performed locally in your
+                browser using the Web Crypto API.<br />
+                No data is ever transmitted over a network. Your keys and
+                messages never leave this page.
+            </div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <script>
+            // ======================== TAB SWITCHING ========================
+            function switchTab(tab) {
+                document.querySelectorAll(".tab-btn").forEach((b, i) => {
+                    b.classList.toggle(
+                        "active",
+                        ["generate", "encrypt", "decrypt"][i] === tab,
+                    );
+                });
+                document
+                    .querySelectorAll(".panel")
+                    .forEach((p) => p.classList.remove("active"));
+                document.getElementById("panel-" + tab).classList.add("active");
+            }
+
+            // ======================== TOAST ========================
+            function showToast(msg, type = "success") {
+                const t = document.getElementById("toast");
+                t.textContent = msg;
+                t.className = "toast " + type + " show";
+                setTimeout(() => t.classList.remove("show"), 3000);
+            }
+
+            // ======================== KEY HELPERS ========================
+            function stripPEM(b64) {
+                return b64.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
+            }
+
+            function base64ToArrayBuffer(b64) {
+                const binary = atob(b64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++)
+                    bytes[i] = binary.charCodeAt(i);
+                return bytes.buffer;
+            }
+
+            function arrayBufferToBase64(buffer) {
+                let binary = "";
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++)
+                    binary += String.fromCharCode(bytes[i]);
+                return btoa(binary);
+            }
+
+            async function exportKeyAsPEM(key, type) {
+                const exported = await crypto.subtle.exportKey(
+                    type === "public" ? "spki" : "pkcs8",
+                    key,
+                );
+                const b64 = arrayBufferToBase64(exported);
+                const lines = b64.match(/.{1,64}/g).join("\n");
+                const label = type === "public" ? "PUBLIC KEY" : "PRIVATE KEY";
+                return `-----BEGIN ${label}-----\n${lines}\n-----END ${label}-----`;
+            }
+
+            async function importKeyFromText(text, type) {
+                const cleaned = stripPEM(text);
+                const buffer = base64ToArrayBuffer(cleaned);
+                return crypto.subtle.importKey(
+                    type === "public" ? "spki" : "pkcs8",
+                    buffer,
+                    { name: "RSA-OAEP", hash: "SHA-256" },
+                    false,
+                    type === "public" ? ["encrypt"] : ["decrypt"],
+                );
+            }
+
+            // ======================== GENERATE KEYS ========================
+            async function generateKeys() {
+                try {
+                    const keyPair = await crypto.subtle.generateKey(
+                        {
+                            name: "RSA-OAEP",
+                            modulusLength: 2048,
+                            publicExponent: new Uint8Array([1, 0, 1]),
+                            hash: "SHA-256",
+                        },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+
+                    const pubPem = await exportKeyAsPEM(
+                        keyPair.publicKey,
+                        "public",
+                    );
+                    const privPem = await exportKeyAsPEM(
+                        keyPair.privateKey,
+                        "private",
+                    );
+
+                    document.getElementById("public-key-output").value = pubPem;
+                    document.getElementById("private-key-output").value =
+                        privPem;
+                    document
+                        .getElementById("key-results")
+                        .classList.remove("hidden");
+                    showToast("Key pair generated successfully!");
+                } catch (e) {
+                    showToast("Failed to generate keys: " + e.message, "error");
+                }
+            }
+
+            function revokeKeys() {
+                document.getElementById("public-key-output").value = "";
+                document.getElementById("private-key-output").value = "";
+                document.getElementById("key-results").classList.add("hidden");
+                showToast("Keys cleared from display.", "success");
+            }
+
+            // ======================== ENCRYPT ========================
+            async function encryptMessage() {
+                const resultEl = document.getElementById("encrypt-result");
+                const outputEl = document.getElementById("encrypt-output");
+                resultEl.classList.remove("hidden");
+                outputEl.classList.remove("error", "plaintext");
+
+                try {
+                    const pubKeyText = document
+                        .getElementById("encrypt-pubkey")
+                        .value.trim();
+                    const messageText =
+                        document.getElementById("encrypt-message").value;
+
+                    if (!pubKeyText)
+                        throw new Error(
+                            "Please enter the recipient's public key.",
+                        );
+                    if (!messageText)
+                        throw new Error("Please enter a message to encrypt.");
+
+                    // Import public key
+                    const pubKey = await importKeyFromText(
+                        pubKeyText,
+                        "public",
+                    );
+
+                    // Generate random AES-256 key
+                    const aesKey = await crypto.subtle.generateKey(
+                        { name: "AES-GCM", length: 256 },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+
+                    // Encrypt message with AES-GCM
+                    const encoder = new TextEncoder();
+                    const messageBytes = encoder.encode(messageText);
+                    const iv = crypto.getRandomValues(new Uint8Array(12));
+                    const ciphertext = await crypto.subtle.encrypt(
+                        { name: "AES-GCM", iv },
+                        aesKey,
+                        messageBytes,
+                    );
+
+                    // Export AES key and encrypt with RSA-OAEP
+                    const rawAesKey = await crypto.subtle.exportKey(
+                        "raw",
+                        aesKey,
+                    );
+                    const encryptedAesKey = await crypto.subtle.encrypt(
+                        { name: "RSA-OAEP" },
+                        pubKey,
+                        rawAesKey,
+                    );
+
+                    // Pack: [encrypted_aes_key (16 bytes header + 256 bytes)] + [iv (12 bytes)] + [ciphertext]
+                    // Format: RSA_KEY_LEN (2 bytes BE) | RSA_CIPHERTEXT | IV (12) | AES_CIPHERTEXT
+                    const rsaLen = encryptedAesKey.byteLength;
+                    const totalLen = 2 + rsaLen + 12 + ciphertext.byteLength;
+                    const packed = new Uint8Array(totalLen);
+                    let offset = 0;
+
+                    // RSA key length (big-endian uint16)
+                    packed[offset++] = (rsaLen >> 8) & 0xff;
+                    packed[offset++] = rsaLen & 0xff;
+
+                    // RSA encrypted AES key
+                    packed.set(new Uint8Array(encryptedAesKey), offset);
+                    offset += rsaLen;
+
+                    // IV
+                    packed.set(iv, offset);
+                    offset += 12;
+
+                    // AES ciphertext
+                    packed.set(new Uint8Array(ciphertext), offset);
+
+                    const resultB64 = arrayBufferToBase64(packed.buffer);
+                    const lines = resultB64.match(/.{1,76}/g).join("\n");
+                    outputEl.textContent = `-----BEGIN ENCRYPTED MESSAGE-----\n${lines}\n-----END ENCRYPTED MESSAGE-----`;
+                    showToast("Message encrypted successfully!");
+                } catch (e) {
+                    outputEl.textContent = "Error: " + e.message;
+                    outputEl.classList.add("error");
+                    showToast("Encryption failed.", "error");
+                }
+            }
+
+            // ======================== DECRYPT ========================
+            async function decryptMessage() {
+                const resultEl = document.getElementById("decrypt-result");
+                const outputEl = document.getElementById("decrypt-output");
+                resultEl.classList.remove("hidden");
+                outputEl.classList.remove("error", "plaintext");
+
+                try {
+                    const ciphertextText = document
+                        .getElementById("decrypt-ciphertext")
+                        .value.trim();
+                    const privKeyText = document
+                        .getElementById("decrypt-privkey")
+                        .value.trim();
+
+                    if (!ciphertextText)
+                        throw new Error("Please enter the ciphertext.");
+                    if (!privKeyText)
+                        throw new Error("Please enter your private key.");
+
+                    // Import private key
+                    const privKey = await importKeyFromText(
+                        privKeyText,
+                        "private",
+                    );
+
+                    // Unpack ciphertext
+                    const packed = new Uint8Array(
+                        base64ToArrayBuffer(stripPEM(ciphertextText)),
+                    );
+                    let offset = 0;
+
+                    // Read RSA key length
+                    if (packed.length < 2)
+                        throw new Error("Ciphertext is too short.");
+                    const rsaLen = (packed[offset] << 8) | packed[offset + 1];
+                    offset += 2;
+
+                    if (offset + rsaLen > packed.length)
+                        throw new Error(
+                            "Invalid ciphertext: truncated RSA key data.",
+                        );
+
+                    // Extract RSA encrypted AES key
+                    const encryptedAesKey = packed.slice(
+                        offset,
+                        offset + rsaLen,
+                    );
+                    offset += rsaLen;
+
+                    if (offset + 12 > packed.length)
+                        throw new Error("Invalid ciphertext: truncated IV.");
+
+                    // Extract IV
+                    const iv = packed.slice(offset, offset + 12);
+                    offset += 12;
+
+                    if (offset >= packed.length)
+                        throw new Error("Invalid ciphertext: no AES data.");
+
+                    // Extract AES ciphertext
+                    const aesCiphertext = packed.slice(offset);
+
+                    // Decrypt AES key with RSA-OAEP
+                    const rawAesKey = await crypto.subtle.decrypt(
+                        { name: "RSA-OAEP" },
+                        privKey,
+                        encryptedAesKey,
+                    );
+
+                    // Import AES key
+                    const aesKey = await crypto.subtle.importKey(
+                        "raw",
+                        rawAesKey,
+                        { name: "AES-GCM" },
+                        false,
+                        ["decrypt"],
+                    );
+
+                    // Decrypt message with AES-GCM
+                    const decrypted = await crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv },
+                        aesKey,
+                        aesCiphertext,
+                    );
+
+                    const decoder = new TextDecoder();
+                    const plaintext = decoder.decode(decrypted);
+                    outputEl.textContent = plaintext;
+                    showToast("Message decrypted successfully!");
+                } catch (e) {
+                    outputEl.textContent = "Error: " + e.message;
+                    outputEl.classList.add("error");
+                    showToast("Decryption failed.", "error");
+                }
+            }
+
+            // ======================== COPY / DOWNLOAD ========================
+            function copyToClipboard(elementId) {
+                const el = document.getElementById(elementId);
+                const text = el.value || el.textContent;
+                navigator.clipboard
+                    .writeText(text)
+                    .then(() => {
+                        showToast("Copied to clipboard!");
+                    })
+                    .catch(() => {
+                        // Fallback
+                        const ta = document.createElement("textarea");
+                        ta.value = text;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand("copy");
+                        document.body.removeChild(ta);
+                        showToast("Copied to clipboard!");
+                    });
+            }
+
+            function downloadKey(textareaId, filename) {
+                const text = document.getElementById(textareaId).value;
+                const blob = new Blob([text], {
+                    type: "application/octet-stream",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast("Key downloaded!");
+            }
+        </script>
+    </body>
+</html>

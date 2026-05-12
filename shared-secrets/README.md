@@ -1,24 +1,50 @@
 # Can a local LLM write a functioning app in the form of a HTML file that uses public/private key pairs to allow two parties to securely share a message?
 
 ## Prompt
-Write a single page HTML app that allows two parties to share information confidentially by allowing both parties to independently run the app locally. The app should allow the user to generate a public/private keypair with strong cryptography. The user can then share their public key via any channel of their choice. A user can then use a public key that has been shared with them to encrypt a payload that they paste into an appropriate input in the HTML app. The encrypted payload can then be shared via any channel of their choice and the receiver can use their private key (the pair of their public key) to decrypt the payload using appropriate input fields in the app. Save the file to shared-secrets-{model-name}.html
+See [prompt.md](prompt.md).
 
 ## Setup
-**Claude Code CLI** version 2.1.138 invoked via Claude Code Router.
+Each run pairs a model with a runner/harness. Runners tried so far:
+
+- **Ollama** via Claude Code CLI (through Claude Code Router)
+- **Ollama** chat CLI (`ollama run`)
+- **Ollama** GUI chat
+- **Ollama** desktop app
+- **LM Studio**
+- **llama.cpp** CLI
 
 ## Hardware
 MacBook Pro M5 Max (18 Core CPU, 40 Core GPU, 16 Core Neural Engine), 128GB RAM.
 
-## LLMs
+## Results
 
-### qwen3.6:35b-a3b-coding-bf16
-Qwen struggles with this for some reason. It produces output that looks good, has appropriate error handling, but the app doesn't actually function.
-Claude Code tried pretty hard to get things to work and sent the result back to the model for re-work 4 or 5 times.
-In total it took about 21 minutes to finish the task and was close to maxing out the CPU most of the time.
-
-You can see the terminal output in [qwen36-35b-a3b-coding-bf16.log](qwen36-35b-a3b-coding-bf16.log) and the HTML it produced in [shared-secrets-qwen36-35b-a3b-coding-bf16.html](shared-secrets-qwen36-35b-a3b-coding-bf16.html).
+Each link below is a single-page HTML app produced by the model. Open it in a browser and try generating a keypair, encrypting a message, and decrypting it back — verdicts are left as an exercise for the reader.
 
 ### gpt-oss:120b
-I assume GPT is optimized for either this type of task or my hardware, or both. It completes the task in a little over 2 minutes and the app functions as requested. The final result is not as visually pleasing as the one Qwen produced, but there was nothing in the prompt asking for a pretty UI.
 
-You can see the terminal output in [gpt-oss-120b.log](gpt-oss-120b.log) and the HTML it produced in [shared-secrets-gpt-oss-120b.html](shared-secrets-gpt-oss-120b.html).
+- Ollama + Claude Code — [html](gpt-oss-120b-olama-claude-code.html), [log](gpt-oss-120b-ollama-claude-code.log)
+- Ollama chat CLI — [html](gpt-oss-120b-ollama-chat-cli.html)
+
+### granite 4.1 30b
+
+- LM Studio — [html](granite-41-30b-lmstudio.html)
+
+### qwen3.5 35b-a3b
+
+- Ollama GUI chat — [html](qwen35-35b-a3b-ollama-gui-chat.html)
+
+### qwen3.6 35b-a3b
+
+- Ollama chat CLI — [html](qwen36-35b-a3b-ollama-chat-cli.html)
+- LM Studio — [html](qwen36-35b-a3b-lmstudio.html)
+- llama.cpp CLI (q4_k_m) — [html](qwen3.6-35B-a3b-q4_k_m-llama-cpp-cli.html)
+- llama.cpp CLI (q4_k_m, alt run) — [html](qwen36-35B-a3b-14_k_m-llama-cpp-cli.html)
+- llama.cpp CLI (q8) — [html](qwen36-35b-a3b-q8-llama-cpp-cli.html)
+
+### qwen3.6 35b-a23 (bf16)
+
+- Ollama desktop app — [html](qwen36-35b-a23-bf16-ollama-app.html)
+
+### qwen3.6 35b-a3b-coding (bf16)
+
+- Ollama + Claude Code — [html](qwen36-35b-a3b-coding-bf16-ollama-claude-code.html), [log](qwen36-35b-a3b-coding-bf16-ollama-claude-code.log)

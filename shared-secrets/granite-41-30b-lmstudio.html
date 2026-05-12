@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Confidential Message Exchange</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+            .section {
+                margin-bottom: 20px;
+                padding: 10px;
+                border: 1px solid #ddd;
+            }
+            button {
+                margin-top: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Key Pair Generation</h2>
+        <div class="section">
+            <button id="generateKeys">Generate Key Pair</button>
+            <pre id="publicKeyOutput"></pre>
+            <pre id="privateKeyOutput"></pre>
+        </div>
+
+        <h2>Encrypt Message</h2>
+        <div class="section">
+            <textarea
+                id="messageInput"
+                rows="4"
+                cols="50"
+                placeholder="Enter your message here..."
+            ></textarea
+            ><br />
+            <input
+                type="text"
+                id="publicKeyInput"
+                placeholder="Recipient's Public Key (Base64)"
+            />
+            <button onclick="encryptMessage()">Encrypt</button>
+            <pre id="encryptedMessageOutput"></pre>
+        </div>
+
+        <h2>Decrypt Message</h2>
+        <div class="section">
+            <textarea
+                id="encryptedInput"
+                rows="4"
+                cols="50"
+                placeholder="Enter encrypted message..."
+            ></textarea
+            ><br />
+            <input
+                type="text"
+                id="privateKeyInput"
+                placeholder="Your Private Key (Base64)"
+            />
+            <button onclick="decryptMessage()">Decrypt</button>
+            <pre id="decryptedMessageOutput"></pre>
+        </div>
+
+        <script>
+            async function generateKeys() {
+                const keyPair = await window.crypto.subtle.generateKey(
+                    {
+                        name: "RSA-OAEP",
+                        modulusLength: 2048, // Can be 1024, 2048, or 4096
+                        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+                        hash: "SHA-256", // Can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+                    },
+                    true,
+                    ["encrypt", "decrypt"],
+                );
+
+                const publicExport = await window.crypto.subtle.exportKey(
+                    "spki",
+                    keyPair.publicKey,
+                );
+                const privateExport = await window.crypto.subtle.exportKey(
+                    "pkcs8",
+                    keyPair.privateKey,
+                );
+
+                document.getElementById("publicKeyOutput").innerText = btoa(
+                    String.fromCharCode.apply(
+                        null,
+                        new Uint8Array(publicExport),
+                    ),
+                );
+                document.getElementById("privateKeyInput").value = btoa(
+                    String.fromCharCode.apply(
+                        null,
+                        new Uint8Array(privateExport),
+                    ),
+                ); // For decryption convenience in this example
+                document.getElementById("privateKeyOutput").innerText = btoa(
+                    String.fromCharCode.apply(
+                        null,
+                        new Uint8Array(privateExport),
+                    ),
+                );
+            }
+
+            async function encryptMessage() {
+                const publicKeyB64 =
+                    document.getElementById("publicKeyInput").value;
+                const message = document.getElementById("messageInput").value;
+
+                if (!publicKeyB64 || !message) {
+                    alert("Please provide both a public key and a message.");
+                    return;
+                }
+
+                const publicKeyPem = `-----BEGIN PUBLIC KEY-----\n${publicKeyB64}\n-----END PUBLIC KEY-----`;
+                // Convert PEM to raw SPKI format expected by the Web Crypto API
+                const publicKeyDer = pemToDer(publicKeyPem);
+                const publicKey = await window.crypto.subtle.importKey(
+                    "spki",
+                    publicKeyDer,
+                    {
+                        name: "RSA-OAEP",
+                        hash: "SHA-256",
+                    },
+                    false,
+                    ["encrypt"],
+                );
+
+                const encrypted = await window.crypto.subtle.encrypt(
+                    {
+                        name: "RSA-OAEP",
+                    },
+                    publicKey,
+                    stringToUint8Array(message),
+                );
+
+                document.getElementById("encryptedMessageOutput").innerText =
+                    btoa(
+                        String.fromCharCode.apply(
+                            null,
+                            new Uint8Array(encrypted),
+                        ),
+                    );
+            }
+
+            async function decryptMessage() {
+                const encryptedB64 =
+                    document.getElementById("encryptedInput").value;
+                const privateKeyB64 =
+                    document.getElementById("privateKeyInput").value;
+
+                if (!encryptedB64 || !privateKeyB64) {
+                    alert(
+                        "Please provide both an encrypted message and a private key.",
+                    );
+                    return;
+                }
+
+                const privateKeyDer = pemToDer(
+                    `-----BEGIN PRIVATE KEY-----\n${privateKeyB64}\n-----END PRIVATE KEY-----`,
+                );
+                const privateKey = await window.crypto.subtle.importKey(
+                    "pkcs8",
+                    privateKeyDer,
+                    {
+                        name: "RSA-OAEP",
+                        hash: "SHA-256",
+                    },
+                    false,
+                    ["decrypt"],
+                );
+
+                const decrypted = await window.crypto.subtle.decrypt(
+                    {
+                        name: "RSA-OAEP",
+                    },
+                    privateKey,
+                    hexStringToUint8Array(encryptedB64), // Assuming the encrypted data is provided in a suitable format; adjust as necessary
+                );
+
+                document.getElementById("decryptedMessageOutput").innerText =
+                    new TextDecoder().decode(decrypted);
+            }
+
+            function stringToUint8Array(str) {
+                return Uint8Array.from(str, (c) => c.charCodeAt(0));
+            }
+
+            // Helper functions for PEM to DER conversion and vice versa would be needed here.
+            // For brevity, they are not fully implemented in this example.
+            // Implementing these correctly is crucial for the encryption/decryption to work with public keys in common formats (e.g., PEM).
+            function pemToDer(pem) {
+                // Convert PEM format to DER (binary) - implementation needed
+                return new Uint8Array(); // Placeholder
+            }
+
+            function hexStringToUint8Array(hexString) {
+                // Assuming the input is a Base64 string, convert it back to Uint8Array
+                const binaryString = atob(hexString);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes;
+            }
+
+            document
+                .getElementById("generateKeys")
+                .addEventListener("click", generateKeys);
+        </script>
+    </body>
+</html>

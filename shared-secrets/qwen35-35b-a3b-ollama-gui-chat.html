@@ -1,0 +1,1184 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Secure Message Exchange</title>
+        <style>
+            :root {
+                --bg: #0d1117;
+                --surface: #161b22;
+                --border: #30363d;
+                --text: #e6edf3;
+                --text-dim: #8b949e;
+                --accent: #58a6ff;
+                --accent-hover: #79b8ff;
+                --green: #3fb950;
+                --green-bg: rgba(63, 185, 80, 0.1);
+                --red: #f85149;
+                --red-bg: rgba(248, 81, 73, 0.1);
+                --orange: #d29922;
+                --orange-bg: rgba(210, 153, 34, 0.1);
+                --purple: #bc8cff;
+                --radius: 10px;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Oxygen, sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                min-height: 100vh;
+                line-height: 1.6;
+            }
+
+            .container {
+                max-width: 860px;
+                margin: 0 auto;
+                padding: 24px 16px 60px;
+            }
+
+            header {
+                text-align: center;
+                padding: 40px 0 32px;
+            }
+
+            header h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                background: linear-gradient(
+                    135deg,
+                    var(--accent),
+                    var(--purple)
+                );
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 8px;
+            }
+
+            header p {
+                color: var(--text-dim);
+                font-size: 0.95rem;
+                max-width: 560px;
+                margin: 0 auto;
+            }
+
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: var(--green-bg);
+                color: var(--green);
+                font-size: 0.75rem;
+                font-weight: 600;
+                padding: 4px 12px;
+                border-radius: 20px;
+                margin-top: 12px;
+                border: 1px solid rgba(63, 185, 80, 0.2);
+            }
+
+            .tabs {
+                display: flex;
+                gap: 4px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 4px;
+                margin-bottom: 24px;
+            }
+
+            .tab-btn {
+                flex: 1;
+                padding: 12px 16px;
+                background: transparent;
+                border: none;
+                color: var(--text-dim);
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                border-radius: 7px;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .tab-btn:hover {
+                color: var(--text);
+                background: rgba(255, 255, 255, 0.04);
+            }
+            .tab-btn.active {
+                background: var(--accent);
+                color: #fff;
+                box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+            }
+
+            .tab-icon {
+                font-size: 1.1rem;
+            }
+
+            .panel {
+                display: none;
+            }
+            .panel.active {
+                display: block;
+                animation: fadeIn 0.25s ease;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(6px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 24px;
+                margin-bottom: 16px;
+            }
+
+            .card h2 {
+                font-size: 1.15rem;
+                margin-bottom: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .card .desc {
+                color: var(--text-dim);
+                font-size: 0.85rem;
+                margin-bottom: 20px;
+                line-height: 1.5;
+            }
+
+            label {
+                display: block;
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: var(--text-dim);
+                margin-bottom: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            textarea,
+            input[type="text"],
+            input[type="number"] {
+                width: 100%;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 7px;
+                color: var(--text);
+                font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+                font-size: 0.85rem;
+                padding: 12px 14px;
+                resize: vertical;
+                transition: border-color 0.2s;
+                line-height: 1.5;
+            }
+
+            textarea:focus,
+            input:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+            }
+
+            textarea {
+                min-height: 120px;
+            }
+
+            .key-length-row {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 16px;
+                align-items: center;
+            }
+
+            .key-length-row label {
+                margin-bottom: 0;
+            }
+
+            select {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 7px;
+                color: var(--text);
+                font-size: 0.85rem;
+                padding: 10px 14px;
+                cursor: pointer;
+            }
+
+            select:focus {
+                outline: none;
+                border-color: var(--accent);
+            }
+
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 7px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-family: inherit;
+            }
+
+            .btn-primary {
+                background: var(--accent);
+                color: #fff;
+                box-shadow: 0 2px 8px rgba(88, 166, 255, 0.25);
+            }
+            .btn-primary:hover {
+                background: var(--accent-hover);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(88, 166, 255, 0.35);
+            }
+
+            .btn-success {
+                background: var(--green);
+                color: #fff;
+                box-shadow: 0 2px 8px rgba(63, 185, 80, 0.25);
+            }
+            .btn-success:hover {
+                background: #4cc764;
+                transform: translateY(-1px);
+            }
+
+            .btn-danger {
+                background: var(--red);
+                color: #fff;
+            }
+            .btn-danger:hover {
+                background: #ff6b65;
+            }
+
+            .btn-outline {
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--text);
+            }
+            .btn-outline:hover {
+                background: rgba(255, 255, 255, 0.04);
+                border-color: var(--text-dim);
+            }
+
+            .btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none !important;
+            }
+
+            .btn-row {
+                display: flex;
+                gap: 10px;
+                margin-top: 16px;
+                flex-wrap: wrap;
+            }
+
+            .result-area {
+                margin-top: 16px;
+                padding: 16px;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 7px;
+                display: none;
+            }
+
+            .result-area.visible {
+                display: block;
+                animation: fadeIn 0.3s ease;
+            }
+
+            .result-area .label {
+                font-size: 0.78rem;
+                font-weight: 600;
+                color: var(--text-dim);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .result-area textarea {
+                min-height: 80px;
+                font-size: 0.8rem;
+            }
+
+            .toast {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                padding: 14px 20px;
+                border-radius: 8px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                z-index: 1000;
+                animation: slideUp 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                max-width: 400px;
+            }
+
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .toast-success {
+                background: var(--green);
+                color: #fff;
+            }
+            .toast-error {
+                background: var(--red);
+                color: #fff;
+            }
+            .toast-info {
+                background: var(--accent);
+                color: #fff;
+            }
+
+            .info-box {
+                background: rgba(88, 166, 255, 0.08);
+                border: 1px solid rgba(88, 166, 255, 0.2);
+                border-radius: 7px;
+                padding: 14px 16px;
+                margin-bottom: 20px;
+                font-size: 0.85rem;
+                color: var(--accent);
+                line-height: 1.6;
+            }
+
+            .info-box strong {
+                color: var(--accent-hover);
+            }
+
+            .warning-box {
+                background: var(--orange-bg);
+                border: 1px solid rgba(210, 153, 34, 0.2);
+                border-radius: 7px;
+                padding: 14px 16px;
+                margin-bottom: 20px;
+                font-size: 0.85rem;
+                color: var(--orange);
+                line-height: 1.6;
+            }
+
+            .key-display {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 7px;
+                padding: 14px;
+                margin-top: 12px;
+                word-break: break-all;
+                font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+                font-size: 0.78rem;
+                color: var(--green);
+                max-height: 200px;
+                overflow-y: auto;
+                line-height: 1.6;
+            }
+
+            .key-display::-webkit-scrollbar {
+                width: 6px;
+            }
+            .key-display::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .key-display::-webkit-scrollbar-thumb {
+                background: var(--border);
+                border-radius: 3px;
+            }
+
+            .step-list {
+                list-style: none;
+                counter-reset: step;
+                margin-bottom: 20px;
+            }
+
+            .step-list li {
+                counter-increment: step;
+                padding: 10px 0 10px 40px;
+                position: relative;
+                font-size: 0.88rem;
+                color: var(--text-dim);
+                line-height: 1.5;
+            }
+
+            .step-list li::before {
+                content: counter(step);
+                position: absolute;
+                left: 0;
+                top: 10px;
+                width: 26px;
+                height: 26px;
+                background: var(--accent);
+                color: #fff;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.75rem;
+                font-weight: 700;
+            }
+
+            .step-list li:last-child {
+                padding-bottom: 0;
+            }
+
+            .divider {
+                border: none;
+                border-top: 1px solid var(--border);
+                margin: 20px 0;
+            }
+
+            .flex-between {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .crypto-detail {
+                font-size: 0.78rem;
+                color: var(--text-dim);
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 12px 14px;
+                margin-top: 12px;
+            }
+
+            .crypto-detail dt {
+                color: var(--accent);
+                font-weight: 600;
+                margin-top: 6px;
+            }
+            .crypto-detail dt:first-child {
+                margin-top: 0;
+            }
+            .crypto-detail dd {
+                color: var(--text-dim);
+                margin-left: 0;
+                margin-bottom: 4px;
+            }
+
+            footer {
+                text-align: center;
+                padding: 32px 0 0;
+                color: var(--text-dim);
+                font-size: 0.78rem;
+            }
+
+            @media (max-width: 600px) {
+                .container {
+                    padding: 12px 10px 40px;
+                }
+                header h1 {
+                    font-size: 1.5rem;
+                }
+                .tab-btn {
+                    padding: 10px 8px;
+                    font-size: 0.8rem;
+                }
+                .tab-btn .tab-label {
+                    display: none;
+                }
+                .tab-btn .tab-icon {
+                    font-size: 1.2rem;
+                }
+                .card {
+                    padding: 16px;
+                }
+                .btn {
+                    padding: 10px 16px;
+                    font-size: 0.85rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>🔐 Secure Message Exchange</h1>
+                <p>
+                    End-to-end encrypted messaging using RSA-4096 + AES-256-GCM
+                    hybrid encryption. Everything runs locally in your browser —
+                    nothing is sent anywhere.
+                </p>
+                <div class="badge">
+                    <span>🛡️</span> Client-Side Cryptography Only
+                </div>
+            </header>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('generate')">
+                    <span class="tab-icon">🔑</span>
+                    <span class="tab-label">Generate Keys</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('encrypt')">
+                    <span class="tab-icon">🔒</span>
+                    <span class="tab-label">Encrypt</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('decrypt')">
+                    <span class="tab-icon">🔓</span>
+                    <span class="tab-label">Decrypt</span>
+                </button>
+            </div>
+
+            <!-- ==================== GENERATE KEYS ==================== -->
+            <div id="panel-generate" class="panel active">
+                <div class="card">
+                    <h2>🔑 Generate Key Pair</h2>
+                    <p class="desc">
+                        Generate a new RSA key pair. Your
+                        <strong>private key</strong> must be kept secret. Your
+                        <strong>public key</strong> can be shared with anyone
+                        who needs to send you encrypted messages.
+                    </p>
+
+                    <div class="info-box">
+                        <strong>How it works:</strong> We use RSA-OAEP with
+                        SHA-256 for key wrapping and AES-256-GCM for the actual
+                        message encryption. This hybrid approach gives you both
+                        strong security and the ability to send messages of any
+                        size.
+                    </div>
+
+                    <label for="keyLength">Key Strength</label>
+                    <div class="key-length-row">
+                        <select id="keyLength">
+                            <option value="2048">RSA-2048 (minimum)</option>
+                            <option value="3072">RSA-3072 (recommended)</option>
+                            <option value="4096" selected>
+                                RSA-4096 (maximum)
+                            </option>
+                        </select>
+                    </div>
+
+                    <button
+                        class="btn btn-primary"
+                        id="generateBtn"
+                        onclick="generateKeys()"
+                    >
+                        ⚡ Generate Key Pair
+                    </button>
+
+                    <div id="keyOutput" style="display: none; margin-top: 20px">
+                        <hr class="divider" />
+
+                        <div style="margin-bottom: 20px">
+                            <div
+                                class="flex-between"
+                                style="margin-bottom: 8px"
+                            >
+                                <label
+                                    style="
+                                        margin-bottom: 0;
+                                        color: var(--green);
+                                    "
+                                    >✅ Public Key (share this)</label
+                                >
+                                <button
+                                    class="btn btn-outline"
+                                    style="padding: 6px 14px; font-size: 0.8rem"
+                                    onclick="copyToClipboard('publicKeyText')"
+                                >
+                                    📋 Copy
+                                </button>
+                            </div>
+                            <div
+                                class="key-display"
+                                id="publicKeyDisplay"
+                            ></div>
+                            <textarea
+                                id="publicKeyText"
+                                readonly
+                                style="
+                                    min-height: 60px;
+                                    margin-top: 8px;
+                                    font-size: 0.75rem;
+                                "
+                            ></textarea>
+                        </div>
+
+                        <div>
+                            <div
+                                class="flex-between"
+                                style="margin-bottom: 8px"
+                            >
+                                <label
+                                    style="margin-bottom: 0; color: var(--red)"
+                                    >🔒 Private Key (keep secret!)</label
+                                >
+                                <button
+                                    class="btn btn-outline"
+                                    style="padding: 6px 14px; font-size: 0.8rem"
+                                    onclick="copyToClipboard('privateKeyText')"
+                                >
+                                    📋 Copy
+                                </button>
+                            </div>
+                            <div
+                                class="key-display"
+                                id="privateKeyDisplay"
+                            ></div>
+                            <textarea
+                                id="privateKeyText"
+                                readonly
+                                style="
+                                    min-height: 60px;
+                                    margin-top: 8px;
+                                    font-size: 0.75rem;
+                                "
+                            ></textarea>
+                        </div>
+
+                        <div class="warning-box" style="margin-top: 16px">
+                            ⚠️ <strong>Warning:</strong> Store your private key
+                            securely. If you lose it, you will never be able to
+                            decrypt messages sent to you. If compromised, anyone
+                            can read your messages.
+                        </div>
+                    </div>
+
+                    <div
+                        class="crypto-detail"
+                        id="cryptoDetail"
+                        style="display: none"
+                    >
+                        <dl>
+                            <dt>Algorithm</dt>
+                            <dd>RSA-OAEP (SHA-256) + AES-256-GCM</dd>
+                            <dt>Key Size</dt>
+                            <dd id="detailKeySize"></dd>
+                            <dt>Key Format</dt>
+                            <dd>
+                                PKCS#8 (private) / X.509 SubjectPublicKeyInfo
+                                (public), PEM-encoded
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ENCRYPT ==================== -->
+            <div id="panel-encrypt" class="panel">
+                <div class="card">
+                    <h2>🔒 Encrypt a Message</h2>
+                    <p class="desc">
+                        Encrypt a message using the recipient's
+                        <strong>public key</strong>. Only the holder of the
+                        matching private key can decrypt it.
+                    </p>
+
+                    <ol class="step-list">
+                        <li>
+                            Get the recipient's public key (shared via any
+                            channel)
+                        </li>
+                        <li>Paste their public key below</li>
+                        <li>Enter your message in the text area</li>
+                        <li>
+                            Click Encrypt — the output can be shared with anyone
+                        </li>
+                    </ol>
+
+                    <label for="recipientPublicKey"
+                        >Recipient's Public Key (PEM format)</label
+                    >
+                    <textarea
+                        id="recipientPublicKey"
+                        placeholder="-----BEGIN PUBLIC KEY-----&#10;MIIBIjAN...&#10;-----END PUBLIC KEY-----"
+                        style="min-height: 80px"
+                    ></textarea>
+
+                    <label for="messageToEncrypt" style="margin-top: 16px"
+                        >Message to Encrypt</label
+                    >
+                    <textarea
+                        id="messageToEncrypt"
+                        placeholder="Enter your confidential message here..."
+                        style="min-height: 120px"
+                    ></textarea>
+
+                    <div class="btn-row">
+                        <button
+                            class="btn btn-success"
+                            onclick="encryptMessage()"
+                        >
+                            🔒 Encrypt Message
+                        </button>
+                        <button
+                            class="btn btn-outline"
+                            onclick="clearEncrypt()"
+                        >
+                            Clear
+                        </button>
+                    </div>
+
+                    <div class="result-area" id="encryptResult">
+                        <div class="label">
+                            Encrypted Payload (share this with the recipient)
+                        </div>
+                        <textarea
+                            id="encryptedOutput"
+                            readonly
+                            style="min-height: 100px; font-size: 0.8rem"
+                        ></textarea>
+                        <div class="btn-row" style="margin-top: 10px">
+                            <button
+                                class="btn btn-outline"
+                                style="padding: 6px 14px; font-size: 0.8rem"
+                                onclick="copyToClipboard('encryptedOutput')"
+                            >
+                                📋 Copy to Clipboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== DECRYPT ==================== -->
+            <div id="panel-decrypt" class="panel">
+                <div class="card">
+                    <h2>🔓 Decrypt a Message</h2>
+                    <p class="desc">
+                        Decrypt a message using your
+                        <strong>private key</strong>. Paste the encrypted
+                        payload and your private key below.
+                    </p>
+
+                    <ol class="step-list">
+                        <li>
+                            Get the encrypted payload (shared via any channel)
+                        </li>
+                        <li>Paste the encrypted payload below</li>
+                        <li>Paste your private key</li>
+                        <li>
+                            Click Decrypt — your original message will appear
+                        </li>
+                    </ol>
+
+                    <label for="encryptedPayload">Encrypted Payload</label>
+                    <textarea
+                        id="encryptedPayload"
+                        placeholder='{"iv":"...","aesKey":"...","ciphertext":"...","tag":"..."}'
+                        style="min-height: 80px"
+                    ></textarea>
+
+                    <label for="myPrivateKey" style="margin-top: 16px"
+                        >Your Private Key (PEM format)</label
+                    >
+                    <textarea
+                        id="myPrivateKey"
+                        placeholder="-----BEGIN PRIVATE KEY-----&#10;MIIEvgIBADAN...&#10;-----END PRIVATE KEY-----"
+                        style="min-height: 80px"
+                    ></textarea>
+
+                    <div class="btn-row">
+                        <button
+                            class="btn btn-primary"
+                            onclick="decryptMessage()"
+                        >
+                            🔓 Decrypt Message
+                        </button>
+                        <button
+                            class="btn btn-outline"
+                            onclick="clearDecrypt()"
+                        >
+                            Clear
+                        </button>
+                    </div>
+
+                    <div class="result-area" id="decryptResult">
+                        <div class="label">Decrypted Message</div>
+                        <textarea
+                            id="decryptedOutput"
+                            readonly
+                            style="
+                                min-height: 100px;
+                                font-size: 0.85rem;
+                                color: var(--green);
+                            "
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>
+                    All cryptography performed client-side using the Web Crypto
+                    API. No data ever leaves your browser.
+                </p>
+            </footer>
+        </div>
+
+        <script>
+            // ======================== TAB SWITCHING ========================
+            function switchTab(tab) {
+                document.querySelectorAll(".tab-btn").forEach((btn, i) => {
+                    btn.classList.toggle(
+                        "active",
+                        ["generate", "encrypt", "decrypt"][i] === tab,
+                    );
+                });
+                document
+                    .querySelectorAll(".panel")
+                    .forEach((p) => p.classList.remove("active"));
+                document.getElementById("panel-" + tab).classList.add("active");
+            }
+
+            // ======================== TOAST NOTIFICATIONS ========================
+            function showToast(message, type = "success") {
+                const existing = document.querySelector(".toast");
+                if (existing) existing.remove();
+
+                const toast = document.createElement("div");
+                toast.className = `toast toast-${type}`;
+                toast.innerHTML = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3500);
+            }
+
+            // ======================== CLIPBOARD ========================
+            async function copyToClipboard(elementId) {
+                const el = document.getElementById(elementId);
+                const text = el.value || el.textContent;
+                try {
+                    await navigator.clipboard.writeText(text.trim());
+                    showToast("✅ Copied to clipboard!", "success");
+                } catch (err) {
+                    el.select();
+                    document.execCommand("copy");
+                    showToast("✅ Copied to clipboard!", "success");
+                }
+            }
+
+            // ======================== KEY UTILITIES ========================
+            function arrayBufferToBase64(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = "";
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            function base64ToArrayBuffer(base64) {
+                const binary = atob(base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+
+            function bufferToBase64Url(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = "";
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary)
+                    .replace(/\+/g, "-")
+                    .replace(/\//g, "_")
+                    .replace(/=+$/, "");
+            }
+
+            function base64UrlToBuffer(b64url) {
+                let base64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+                while (base64.length % 4) base64 += "=";
+                return base64ToArrayBuffer(base64);
+            }
+
+            function pemToBuffer(pem) {
+                const match = pem.match(
+                    /-----BEGIN ([^-]+)-----([\s\S]*?)-----END \1-----/,
+                );
+                if (!match)
+                    throw new Error(
+                        "Invalid PEM format. Ensure the key includes BEGIN/END markers.",
+                    );
+                return base64ToArrayBuffer(match[2].replace(/\s/g, ""));
+            }
+
+            function bufferToPem(buffer, type) {
+                const b64 = arrayBufferToBase64(buffer);
+                const lines = [];
+                for (let i = 0; i < b64.length; i += 64) {
+                    lines.push(b64.substring(i, i + 64));
+                }
+                return `-----BEGIN ${type}-----\n${lines.join("\n")}\n-----END ${type}-----`;
+            }
+
+            // ======================== KEY GENERATION ========================
+            async function generateKeys() {
+                const btn = document.getElementById("generateBtn");
+                const keyLength = parseInt(
+                    document.getElementById("keyLength").value,
+                );
+
+                btn.disabled = true;
+                btn.innerHTML = "⏳ Generating...";
+
+                try {
+                    const keyPair = await window.crypto.subtle.generateKey(
+                        {
+                            name: "RSA-OAEP",
+                            modulusLength: keyLength,
+                            publicExponent: new Uint8Array([1, 0, 1]),
+                            hash: "SHA-256",
+                        },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+
+                    // Export public key
+                    const pubBuf = await window.crypto.subtle.exportKey(
+                        "spki",
+                        keyPair.publicKey,
+                    );
+                    const pubPem = bufferToPem(pubBuf, "PUBLIC KEY");
+
+                    // Export private key
+                    const privBuf = await window.crypto.subtle.exportKey(
+                        "pkcs8",
+                        keyPair.privateKey,
+                    );
+                    const privPem = bufferToPem(privBuf, "PRIVATE KEY");
+
+                    // Display
+                    document.getElementById("publicKeyDisplay").textContent =
+                        pubPem;
+                    document.getElementById("publicKeyText").value = pubPem;
+                    document.getElementById("privateKeyDisplay").textContent =
+                        privPem;
+                    document.getElementById("privateKeyText").value = privPem;
+
+                    document.getElementById("keyOutput").style.display =
+                        "block";
+                    document.getElementById("cryptoDetail").style.display =
+                        "block";
+                    document.getElementById("detailKeySize").textContent =
+                        `${keyLength}-bit RSA`;
+
+                    showToast("✅ Key pair generated successfully!", "success");
+                } catch (err) {
+                    showToast(
+                        "❌ Key generation failed: " + err.message,
+                        "error",
+                    );
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = "⚡ Generate Key Pair";
+                }
+            }
+
+            // ======================== ENCRYPTION ========================
+            async function encryptMessage() {
+                const resultArea = document.getElementById("encryptResult");
+                const output = document.getElementById("encryptedOutput");
+
+                try {
+                    // Get public key
+                    const pubPem = document
+                        .getElementById("recipientPublicKey")
+                        .value.trim();
+                    if (!pubPem)
+                        throw new Error(
+                            "Please paste the recipient's public key.",
+                        );
+
+                    const pubBuffer = pemToBuffer(pubPem);
+                    const publicKey = await window.crypto.subtle.importKey(
+                        "spki",
+                        pubBuffer,
+                        { name: "RSA-OAEP", hash: "SHA-256" },
+                        false,
+                        ["encrypt"],
+                    );
+
+                    // Get message
+                    const message =
+                        document.getElementById("messageToEncrypt").value;
+                    if (!message)
+                        throw new Error("Please enter a message to encrypt.");
+
+                    const msgBuffer = new TextEncoder().encode(message);
+
+                    // Generate random AES-256 key
+                    const aesKey = await window.crypto.subtle.generateKey(
+                        { name: "AES-GCM", length: 256 },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+
+                    // Generate random IV (12 bytes for GCM)
+                    const iv = window.crypto.getRandomValues(
+                        new Uint8Array(12),
+                    );
+
+                    // Encrypt message with AES-GCM
+                    const encryptedMsg = await window.crypto.subtle.encrypt(
+                        { name: "AES-GCM", iv: iv },
+                        aesKey,
+                        msgBuffer,
+                    );
+
+                    // Export AES key and encrypt with RSA
+                    const exportedAesKey = await window.crypto.subtle.exportKey(
+                        "raw",
+                        aesKey,
+                    );
+                    const encryptedAesKey = await window.crypto.subtle.encrypt(
+                        { name: "RSA-OAEP" },
+                        publicKey,
+                        exportedAesKey,
+                    );
+
+                    // Build payload
+                    const payload = {
+                        iv: bufferToBase64Url(iv),
+                        aesKey: bufferToBase64Url(encryptedAesKey),
+                        ciphertext: bufferToBase64Url(encryptedMsg),
+                    };
+
+                    output.value = JSON.stringify(payload);
+                    resultArea.classList.add("visible");
+
+                    showToast("✅ Message encrypted successfully!", "success");
+                } catch (err) {
+                    showToast("❌ Encryption failed: " + err.message, "error");
+                    resultArea.classList.remove("visible");
+                }
+            }
+
+            function clearEncrypt() {
+                document.getElementById("recipientPublicKey").value = "";
+                document.getElementById("messageToEncrypt").value = "";
+                document.getElementById("encryptedOutput").value = "";
+                document
+                    .getElementById("encryptResult")
+                    .classList.remove("visible");
+            }
+
+            // ======================== DECRYPTION ========================
+            async function decryptMessage() {
+                const resultArea = document.getElementById("decryptResult");
+                const output = document.getElementById("decryptedOutput");
+
+                try {
+                    // Get private key
+                    const privPem = document
+                        .getElementById("myPrivateKey")
+                        .value.trim();
+                    if (!privPem)
+                        throw new Error("Please paste your private key.");
+
+                    const privBuffer = pemToBuffer(privPem);
+                    const privateKey = await window.crypto.subtle.importKey(
+                        "pkcs8",
+                        privBuffer,
+                        { name: "RSA-OAEP", hash: "SHA-256" },
+                        false,
+                        ["decrypt"],
+                    );
+
+                    // Get encrypted payload
+                    const payloadStr = document
+                        .getElementById("encryptedPayload")
+                        .value.trim();
+                    if (!payloadStr)
+                        throw new Error("Please paste the encrypted payload.");
+
+                    let payload;
+                    try {
+                        payload = JSON.parse(payloadStr);
+                    } catch {
+                        throw new Error(
+                            "Invalid payload format. Expected a JSON object with iv, aesKey, and ciphertext fields.",
+                        );
+                    }
+
+                    if (!payload.iv || !payload.aesKey || !payload.ciphertext) {
+                        throw new Error(
+                            "Payload is missing required fields (iv, aesKey, ciphertext).",
+                        );
+                    }
+
+                    // Decrypt AES key with RSA
+                    const encryptedAesKey = base64UrlToBuffer(payload.aesKey);
+                    const rawAesKey = await window.crypto.subtle.decrypt(
+                        { name: "RSA-OAEP" },
+                        privateKey,
+                        encryptedAesKey,
+                    );
+
+                    // Import AES key
+                    const aesKey = await window.crypto.subtle.importKey(
+                        "raw",
+                        rawAesKey,
+                        { name: "AES-GCM" },
+                        false,
+                        ["decrypt"],
+                    );
+
+                    // Decrypt message
+                    const iv = base64UrlToBuffer(payload.iv);
+                    const ciphertext = base64UrlToBuffer(payload.ciphertext);
+
+                    const decryptedBuffer = await window.crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv: iv },
+                        aesKey,
+                        ciphertext,
+                    );
+
+                    const decrypted = new TextDecoder().decode(decryptedBuffer);
+                    output.value = decrypted;
+                    resultArea.classList.add("visible");
+
+                    showToast("✅ Message decrypted successfully!", "success");
+                } catch (err) {
+                    showToast("❌ Decryption failed: " + err.message, "error");
+                    resultArea.classList.remove("visible");
+                }
+            }
+
+            function clearDecrypt() {
+                document.getElementById("encryptedPayload").value = "";
+                document.getElementById("myPrivateKey").value = "";
+                document.getElementById("decryptedOutput").value = "";
+                document
+                    .getElementById("decryptResult")
+                    .classList.remove("visible");
+            }
+        </script>
+    </body>
+</html>

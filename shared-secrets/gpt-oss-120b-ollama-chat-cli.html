@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Confidential Message Exchange (Pure‑JS)</title>
+        <style>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                margin: 2rem;
+                background: #f5f5f5;
+                color: #333;
+            }
+            h2 {
+                margin-top: 2rem;
+            }
+            textarea,
+            input {
+                width: 100%;
+                font-family: monospace;
+                padding: 0.5rem;
+                margin: 0.3rem 0;
+            }
+            button {
+                padding: 0.5rem 1rem;
+                margin: 0.5rem 0;
+            }
+            .section {
+                background: #fff;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 5px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .output {
+                background: #eaeaea;
+                padding: 0.5rem;
+                border-radius: 3px;
+                word-break: break-all;
+            }
+            .note {
+                font-size: 0.9rem;
+                color: #555;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>🔐 Confidential Message Exchange</h1>
+        <p class="note">
+            All cryptographic operations are performed locally in the browser
+            using the <strong>Web Crypto API</strong>. No data ever leaves your
+            computer.
+        </p>
+
+        <div class="section" id="keygen">
+            <h2>1️⃣ Generate RSA‑OAEP (4096‑bit) Key Pair</h2>
+            <button id="genBtn">Generate New Keys</button>
+            <p class="note">
+                The private key never leaves this page. The public key can be
+                shared with anyone.
+            </p>
+
+            <label>Public Key (Base64, PEM‑style)</label>
+            <textarea
+                id="pubKey"
+                rows="6"
+                readonly
+                placeholder="Your public key will appear here…"
+            ></textarea>
+
+            <label
+                >Private Key (Base64, PEM‑style) –
+                <strong>keep this secret!</strong></label
+            >
+            <textarea
+                id="privKey"
+                rows="8"
+                readonly
+                placeholder="Your private key will appear here…"
+            ></textarea>
+        </div>
+
+        <div class="section" id="encrypt">
+            <h2>2️⃣ Encrypt a Message</h2>
+            <label
+                >Paste the <strong>recipient’s</strong> public key (Base64
+                PEM)</label
+            >
+            <textarea
+                id="peerPubKey"
+                rows="6"
+                placeholder="Recipient public key…"
+            ></textarea>
+
+            <label>Plain‑text message to encrypt</label>
+            <textarea
+                id="plainText"
+                rows="4"
+                placeholder="Your secret message…"
+            ></textarea>
+
+            <button id="encBtn">Encrypt</button>
+
+            <label
+                >Encrypted payload (Base64) – send this to the recipient</label
+            >
+            <textarea
+                id="cipherText"
+                rows="6"
+                readonly
+                placeholder="Encrypted payload will appear here…"
+            ></textarea>
+        </div>
+
+        <div class="section" id="decrypt">
+            <h2>3️⃣ Decrypt a Received Message</h2>
+            <label
+                >Paste your <strong>private key</strong> (Base64 PEM) – same key
+                that generated the public key above</label
+            >
+            <textarea
+                id="myPrivKey"
+                rows="8"
+                placeholder="Your private key…"
+            ></textarea>
+
+            <label>Paste the received encrypted payload (Base64)</label>
+            <textarea
+                id="recvCipher"
+                rows="6"
+                placeholder="Encrypted payload…"
+            ></textarea>
+
+            <button id="decBtn">Decrypt</button>
+
+            <label>Decrypted plain‑text</label>
+            <textarea
+                id="decrypted"
+                rows="4"
+                readonly
+                placeholder="Decrypted message will appear here…"
+            ></textarea>
+        </div>
+
+        <script>
+            /* -------------------------------------------------------------------------
+   Helper functions – base64 <-> ArrayBuffer, PEM wrappers, UI utilities
+   ------------------------------------------------------------------------- */
+            const enc = new TextEncoder();
+            const dec = new TextDecoder();
+
+            function arrayBufferToBase64(buf) {
+                return btoa(String.fromCharCode(...new Uint8Array(buf)));
+            }
+            function base64ToArrayBuffer(b64) {
+                const binary = atob(b64);
+                const len = binary.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+                return bytes.buffer;
+            }
+            function wrapPem(base64, type) {
+                const lineLen = 64;
+                const lines = [];
+                for (let i = 0; i < base64.length; i += lineLen) {
+                    lines.push(base64.slice(i, i + lineLen));
+                }
+                return `-----BEGIN ${type}-----\n${lines.join("\n")}\n-----END ${type}-----`;
+            }
+            function unwrapPem(pem) {
+                return pem
+                    .replace(/-----BEGIN [^-]+-----/, "")
+                    .replace(/-----END [^-]+-----/, "")
+                    .replace(/\s+/g, "");
+            }
+
+            /* -------------------------------------------------------------------------
+   1️⃣ Key generation
+   ------------------------------------------------------------------------- */
+            document
+                .getElementById("genBtn")
+                .addEventListener("click", async () => {
+                    const keyPair = await crypto.subtle.generateKey(
+                        {
+                            name: "RSA-OAEP",
+                            modulusLength: 4096,
+                            publicExponent: new Uint8Array([1, 0, 1]), // 0x10001
+                            hash: "SHA-256",
+                        },
+                        true, // extractable – we need to export for display
+                        ["encrypt", "decrypt"],
+                    );
+
+                    // Export keys as raw (SPKI for public, PKCS8 for private)
+                    const pubBuf = await crypto.subtle.exportKey(
+                        "spki",
+                        keyPair.publicKey,
+                    );
+                    const privBuf = await crypto.subtle.exportKey(
+                        "pkcs8",
+                        keyPair.privateKey,
+                    );
+
+                    const pubB64 = arrayBufferToBase64(pubBuf);
+                    const privB64 = arrayBufferToBase64(privBuf);
+
+                    document.getElementById("pubKey").value = wrapPem(
+                        pubB64,
+                        "PUBLIC KEY",
+                    );
+                    document.getElementById("privKey").value = wrapPem(
+                        privB64,
+                        "PRIVATE KEY",
+                    );
+                });
+
+            /* -------------------------------------------------------------------------
+   2️⃣ Encryption
+   ------------------------------------------------------------------------- */
+            document
+                .getElementById("encBtn")
+                .addEventListener("click", async () => {
+                    const peerPem = document
+                        .getElementById("peerPubKey")
+                        .value.trim();
+                    const plain = document.getElementById("plainText").value;
+                    if (!peerPem || !plain)
+                        return alert(
+                            "Please provide a public key and a message.",
+                        );
+
+                    // Import recipient public key
+                    const pubB64 = unwrapPem(peerPem);
+                    const pubBuf = base64ToArrayBuffer(pubB64);
+                    const publicKey = await crypto.subtle.importKey(
+                        "spki",
+                        pubBuf,
+                        { name: "RSA-OAEP", hash: "SHA-256" },
+                        false,
+                        ["encrypt"],
+                    );
+
+                    // Encrypt
+                    const ciphertext = await crypto.subtle.encrypt(
+                        { name: "RSA-OAEP" },
+                        publicKey,
+                        enc.encode(plain),
+                    );
+
+                    document.getElementById("cipherText").value =
+                        arrayBufferToBase64(ciphertext);
+                });
+
+            /* -------------------------------------------------------------------------
+   3️⃣ Decryption
+   ------------------------------------------------------------------------- */
+            document
+                .getElementById("decBtn")
+                .addEventListener("click", async () => {
+                    const privPem = document
+                        .getElementById("myPrivKey")
+                        .value.trim();
+                    const recvB64 = document
+                        .getElementById("recvCipher")
+                        .value.trim();
+                    if (!privPem || !recvB64)
+                        return alert(
+                            "Please provide a private key and a ciphertext.",
+                        );
+
+                    // Import private key
+                    const privB64 = unwrapPem(privPem);
+                    const privBuf = base64ToArrayBuffer(privB64);
+                    const privateKey = await crypto.subtle.importKey(
+                        "pkcs8",
+                        privBuf,
+                        { name: "RSA-OAEP", hash: "SHA-256" },
+                        false,
+                        ["decrypt"],
+                    );
+
+                    // Decrypt
+                    const cipherBuf = base64ToArrayBuffer(recvB64);
+                    try {
+                        const plainBuf = await crypto.subtle.decrypt(
+                            { name: "RSA-OAEP" },
+                            privateKey,
+                            cipherBuf,
+                        );
+                        document.getElementById("decrypted").value =
+                            dec.decode(plainBuf);
+                    } catch (e) {
+                        alert(
+                            "Decryption failed – probably wrong key or corrupted ciphertext.",
+                        );
+                        console.error(e);
+                    }
+                });
+        </script>
+    </body>
+</html>

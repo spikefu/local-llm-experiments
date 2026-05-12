@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shared Secrets</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;background:#f9fafb;color:#111827;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:2rem 1rem}
+  .container{width:100%;max-width:720px}
+  header{text-align:center;margin-bottom:2rem}
+  header h1{font-size:1.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:.5rem}
+  header p{color:#6b7280;margin-top:.5rem;font-size:.95rem;line-height:1.5}
+  .tabs{display:flex;gap:4px;background:#e5e7eb;border-radius:10px;padding:4px;margin-bottom:1.5rem}
+  .tab{flex:1;padding:.7rem 1rem;border:none;background:transparent;border-radius:7px;cursor:pointer;font-size:.9rem;font-weight:500;color:#4b5563;transition:all .2s}
+  .tab:hover{color:#111827}
+  .tab.active{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1);color:#111827}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+  button{padding:.6rem 1.2rem;border:none;border-radius:8px;font-size:.9rem;font-weight:500;cursor:pointer;transition:all .15s}
+  button:active{transform:scale(.98)}
+  .btn-primary{background:#3b82f6;color:#fff}
+  .btn-primary:hover{background:#2563eb}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  textarea,.text-input{width:100%;padding:.7rem;border:1px solid #d1d5db;border-radius:8px;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:.85rem;resize:vertical;background:#f9fafb;transition:border-color .15s}
+  textarea:focus,.text-input:focus{outline:none;border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+  textarea{min-height:120px}
+  .text-input{min-height:auto}
+  .field{margin-bottom:1.25rem}
+  .field label{display:block;font-weight:500;margin-bottom:.4rem;font-size:.9rem;color:#374151}
+  .actions{display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+  .btn-outline{background:#fff;border:1px solid #d1d5db;color:#4b5563}
+  .btn-outline:hover{background:#f9fafb;border-color:#9ca3af}
+  .output-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;position:relative}
+  .output-box textarea{min-height:100px;background:transparent;border:none;resize:vertical}
+  .output-actions{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
+  .info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem;font-size:.85rem;color:#1e40af;line-height:1.5}
+  .info-box ol{margin:.5rem 0 0 1.25rem}
+  .info-box li{margin-bottom:.25rem}
+  .key-display{width:100%;padding:.6rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:.75rem;word-break:break-all;max-height:120px;overflow-y:auto;user-select:text;resize:vertical;min-height:60px;line-height:1.6}
+  .status{padding:.5rem .75rem;border-radius:6px;font-size:.85rem;margin-bottom:1rem;display:none}
+  .status.success{display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+  .status.error{display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+  .divider{border:none;border-top:1px solid #e5e7eb;margin:1.25rem 0}
+  @media(max-width:600px){body{padding:1rem .5rem}.card{padding:1.25rem}header h1{font-size:1.4rem}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Shared Secrets
+    </h1>
+    <p>End-to-end encrypted communication between two parties.<br>All cryptography runs locally in your browser.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="generate" role="tab" aria-selected="true">Generate Keys</button>
+    <button class="tab" data-tab="encrypt" role="tab" aria-selected="false">Encrypt</button>
+    <button class="tab" data-tab="decrypt" role="tab" aria-selected="false">Decrypt</button>
+  </div>
+
+  <div class="card">
+    <!-- Generate Keys -->
+    <div id="tab-generate" class="tab-content active">
+      <div class="info-box">
+        <strong>How it works:</strong>
+        <ol>
+          <li>Click <strong>Generate Keypair</strong> below</li>
+          <li>Copy your <strong>public key</strong> and share it with the person you want to communicate with</li>
+          <li>Keep your <strong>private key</strong> secret &mdash; you&rsquo;ll need it to decrypt their messages</li>
+        </ol>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-generate">Generate Keypair</button>
+      </div>
+      <div id="gen-status" class="status"></div>
+      <div id="key-output" style="display:none">
+        <hr class="divider">
+        <div class="field">
+          <label>Private Key <span style="font-weight:400;color:#9ca3af">(keep this secret)</span></label>
+          <textarea id="private-key-display" class="key-display" readonly rows="5"></textarea>
+        </div>
+        <div class="output-actions">
+          <button class="btn-outline" onclick="copyText('private-key-display')">Copy Private Key</button>
+          <button class="btn-outline" onclick="importPrivateKeyFromPrompt()">Import Private Key</button>
+        </div>
+        <hr class="divider">
+        <div class="field">
+          <label>Public Key <span style="font-weight:400;color:#9ca3af">(safe to share)</span></label>
+          <textarea id="public-key-display" class="key-display" readonly rows="4"></textarea>
+        </div>
+        <div class="output-actions">
+          <button class="btn-outline" onclick="copyText('public-key-display')">Copy Public Key</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Encrypt -->
+    <div id="tab-encrypt" class="tab-content">
+      <div class="info-box">
+        <strong>Encrypt a message:</strong>
+        <ol>
+          <li>Paste the sender&rsquo;s <strong>public key</strong> above</li>
+          <li>Type or paste your <strong>message</strong> below</li>
+          <li>Click <strong>Encrypt</strong> and share the ciphertext</li>
+        </ol>
+      </div>
+      <div id="enc-status" class="status"></div>
+      <div class="field">
+        <label>Recipient&rsquo;s Public Key (PEM format)</label>
+        <textarea id="pub-key-input" placeholder="-----BEGIN PUBLIC KEY-----&#10;MIIBIjAN..."></textarea>
+      </div>
+      <div class="field">
+        <label>Message</label>
+        <textarea id="encrypt-message" placeholder="Your secret message..." rows="5"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-encrypt">Encrypt</button>
+      </div>
+      <div id="enc-output" class="output-box" style="display:none">
+        <label style="font-weight:500;font-size:.85rem;color:#6b7280;margin-bottom:.5rem;display:block">Encrypted Payload (share this)</label>
+        <textarea id="encrypted-output" readonly rows="6"></textarea>
+        <div class="output-actions">
+          <button class="btn-outline" onclick="copyText('encrypted-output')">Copy Payload</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decrypt -->
+    <div id="tab-decrypt" class="tab-content">
+      <div class="info-box">
+        <strong>Decrypt a message:</strong>
+        <ol>
+          <li>Import or paste your <strong>private key</strong></li>
+          <li>Paste the <strong>encrypted payload</strong> you received</li>
+          <li>Click <strong>Decrypt</strong> to read the message</li>
+        </ol>
+      </div>
+      <div id="dec-status" class="status"></div>
+      <div class="field">
+        <label>Your Private Key (PEM format)</label>
+        <textarea id="priv-key-input" placeholder="-----BEGIN PRIVATE KEY-----&#10;MIIEvQIBAD..."></textarea>
+      </div>
+      <div class="field">
+        <label>Encrypted Payload <span style="font-weight:400;color:#9ca3af">(base64 format)</span></label>
+        <textarea id="encrypted-input" placeholder="eyJraWQi..."></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-decrypt">Decrypt</button>
+      </div>
+      <div id="dec-output" class="output-box" style="display:none">
+        <label style="font-weight:500;font-size:.85rem;color:#6b7280;margin-bottom:.5rem;display:block">Decrypted Message</label>
+        <textarea id="decrypted-output" readonly rows="6"></textarea>
+        <div class="output-actions">
+          <button class="btn-outline" onclick="copyText('decrypted-output')">Copy Message</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── helpers ─── */
+const $=id=>document.getElementById(id);
+function base64ToBytes(s){
+  let padded=s;
+  const pad=padded.length%4;
+  if(pad)padded+='='.repeat(4-pad);
+  const raw=atob(padded);
+  const bytes=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+  return bytes;
+}
+function bytesToBase64(b){return btoa(String.fromCharCode(...b))}
+function status(el,msg,type='success'){el.textContent=msg;el.className='status '+type;return false}
+function copyText(elId){
+  const el=document.getElementById(elId);
+  el.select();el.setSelectionRange(0,99999);
+  navigator.clipboard.writeText(el.value).then(()=>{
+    let stId=null;
+    if(elId==='private-key-display')stId='gen-status';
+    else if(elId==='public-key-display')stId='gen-status';
+    else if(elId==='encrypted-output')stId='enc-status';
+    else if(elId==='decrypted-output')stId='dec-status';
+    if(stId)showStatus($(stId),'Copied to clipboard!','success');
+  }).catch(()=>{status($('gen-status'),'Copy failed — please copy manually.','error')});
+}
+function setSelectionRange(el,start){try{el.setSelectionRange(start,start)}catch(e){}}
+
+/* ─── crypto ─── */
+async function generateKeypair(){
+  const kp=await crypto.subtle.generateKey({name:'RSA-OAEP',modulusLength:4096,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['encrypt','decrypt']);
+  const pubBytes=await crypto.subtle.exportKey('spki',kp.publicKey);
+  const prvBytes=await crypto.subtle.exportKey('pkcs8',kp.privateKey);
+  return{publicKey:pem('PUBLIC KEY',pubBytes),privateKey:pem('PRIVATE KEY',prvBytes)}
+}
+function pem(label,bytes){
+  const b64=bytesToBase64(bytes);
+  return'-----BEGIN '+label+'-----\n'+b64.match(/.{1,64}/g).join('\n')+'\n-----END '+label+'-----'
+}
+async function importPublicKey(pemStr){
+  const b64=pemStr.replace(/-----[^-]+-----/g,'').replace(/\s/g,'');
+  const der=base64ToBytes(b64);
+  return crypto.subtle.importKey('spki',der, {name:'RSA-OAEP',hash:'SHA-256'},true,['encrypt'])
+}
+async function importPrivateKey(pemStr){
+  const b64=pemStr.replace(/-----[^-]+-----/g,'').replace(/\s/g,'');
+  const der=base64ToBytes(b64);
+  return crypto.subtle.importKey('pkcs8',der,{name:'RSA-OAEP',hash:'SHA-256'},true,['decrypt'])
+}
+async function encryptMessage(pubKeyPem,message){
+  const pubKey=await importPublicKey(pubKeyPem);
+  const aesKey=await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+  const rawAesKey=await crypto.subtle.exportKey('raw',aesKey);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const enc=new TextEncoder();
+  const encrypted=await crypto.subtle.encrypt({name:'AES-GCM',iv},aesKey,enc.encode(message));
+  const wrapped=await crypto.subtle.encrypt({name:'RSA-OAEP'},pubKey,rawAesKey);
+  const payload={
+    ek:btoa(String.fromCharCode(...new Uint8Array(wrapped))),
+    d:btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+    iv:btoa(String.fromCharCode(...iv))
+  };
+  return JSON.stringify(payload);
+}
+async function decryptMessage(privKeyPem,payloadStr){
+  const prvKey=await importPrivateKey(privKeyPem);
+  const payload=JSON.parse(payloadStr);
+  const ek=new Uint8Array(atob(payload.ek).split('').map(c=>c.charCodeAt(0)));
+  const data=new Uint8Array(atob(payload.d).split('').map(c=>c.charCodeAt(0)));
+  const iv=new Uint8Array(atob(payload.iv).split('').map(c=>c.charCodeAt(0)));
+  const rawAesKey=await crypto.subtle.decrypt({name:'RSA-OAEP'},prvKey,ek);
+  const aesKey=await crypto.subtle.importKey('raw',rawAesKey,{name:'AES-GCM',length:256},true,[]);
+  const decrypted=await crypto.subtle.decrypt({name:'AES-GCM',iv},aesKey,data);
+  return new TextDecoder().decode(decrypted);
+}
+
+/* ─── ui wiring ─── */
+function showStatus(el,msg,type){el.textContent=msg;el.className='status '+type;el.style.display='block'}
+
+/* tabs */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false')});
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    tab.classList.add('active');tab.setAttribute('aria-selected','true');
+    $('tab-'+tab.dataset.tab).classList.add('active')
+  });
+  tab.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();tab.click()}
+  })
+});
+
+/* generate */
+$('btn-generate').addEventListener('click',async()=>{
+  $('btn-generate').disabled=true;$('btn-generate').textContent='Generating...';
+  try{
+    const kp=await generateKeypair();
+    $('private-key-display').value=kp.privateKey;
+    $('public-key-display').value=kp.publicKey;
+    $('key-output').style.display='block';
+    showStatus($('gen-status'),'Keypair generated successfully!','success');
+  }catch(e){showStatus($('gen-status'),'Generation failed: '+e.message,'error')}
+  finally{$('btn-generate').disabled=false;$('btn-generate').textContent='Generate Keypair'}
+});
+
+/* encrypt */
+$('btn-encrypt').addEventListener('click',async()=>{
+  const pubKey=$('pub-key-input').value.trim();
+  const message=$('encrypt-message').value;
+  $('enc-output').style.display='none';
+  if(!pubKey)return showStatus($('enc-status'),'Please paste a public key.','error');
+  if(!message)return showStatus($('enc-status'),'Please enter a message to encrypt.','error');
+  $('btn-encrypt').disabled=true;$('btn-encrypt').textContent='Encrypting...';
+  try{
+    const result=await encryptMessage(pubKey,message);
+    $('encrypted-output').value=result;
+    $('enc-output').style.display='block';
+  }catch(e){showStatus($('enc-status'),'Encryption failed: '+e.message,'error')}
+  finally{$('btn-encrypt').disabled=false;$('btn-encrypt').textContent='Encrypt'}
+});
+
+/* decrypt */
+$('btn-decrypt').addEventListener('click',async()=>{
+  const privKey=$('priv-key-input').value.trim();
+  const payload=$('encrypted-input').value.trim();
+  $('dec-output').style.display='none';
+  if(!privKey)return showStatus($('dec-status'),'Please paste your private key.','error');
+  if(!payload)return showStatus($('dec-status'),'Please paste an encrypted payload.','error');
+  $('btn-decrypt').disabled=true;$('btn-decrypt').textContent='Decrypting...';
+  try{
+    const result=await decryptMessage(privKey,payload);
+    $('decrypted-output').value=result;
+    $('dec-output').style.display='block';
+  }catch(e){showStatus($('dec-status'),'Decryption failed: '+e.message,'error')}
+  finally{$('btn-decrypt').disabled=false;$('btn-decrypt').textContent='Decrypt'}
+});
+
+/* import private key */
+function importPrivateKeyFromPrompt(){
+  const pk=prompt('Paste your private key in PEM format:');
+  if(pk&&!pk.trim())return;
+  if(pk&&pk.trim()){$('priv-key-input').value=pk.trim();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})}
+}
+</script>
+</body>
+</html>
